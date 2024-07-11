@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>API Data</title>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <style>
+      .table-wrapper {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+      .table thead th {
+        position: sticky;
+        top: 0;
+        background: #fff;
+        z-index: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="mt-5">API Data</h1>
+      <p>Total Count: {{ total_count }}</p>
+      <div class="table-wrapper">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Recommendation Mark</th>
+              <th>Volume Change</th>
+              <th>Volume</th>
+              <th>Average Volume (30d)</th>
+              <th>Average Volume (10d)</th>
+              <th>MLiq</th>
+              <th>DY%</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in data %}
+            <tr>
+              <td>{{ item.name }}</td>
+              <td>{{ item.description }}</td>
+              <td>{{ item.recommendation_mark }}</td>
+              <td>{{ item.volume_change }}%</td>
+              <td>{{ item.volume }}</td>
+              <td>{{ item.average_volume_30d_calc }}</td>
+              <td>{{ item.average_volume_10d_calc }}</td>
+              <td>{{ item.net_margin_fy }}</td>
+              <td>{{ item.dividends_yield_current }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

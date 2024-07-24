@@ -167,7 +167,7 @@ root.title("Stock Ticker Selection")
 
 label_ticker = tk.Label(root, text="Select Ticker:")
 label_ticker.pack(pady=10)
-ticker_combo = ttk.Combobox(root, values=["VALE3", "PETR4", "ITSA4", "KLBN3", "RANI3", "ITLC34"])
+ticker_combo = ttk.Combobox(root, values=["B3SA3", "VALE3", "PETR4", "ITSA4", "KLBN3", "RANI3", "ITLC34"])
 ticker_combo.pack(pady=10)
 ticker_combo.current(0)
 

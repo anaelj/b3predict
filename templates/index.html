@@ -18,7 +18,32 @@
         background: #fff;
         z-index: 1;
       }
+      .highlight {
+        background-color: #d4edda; /* cor verde clara */
+      }
     </style>
+    <script>
+      function calculateGreenIntensity(volume, avgVolume) {
+        let ratio = volume / avgVolume;
+        if (ratio <= 2) return 0.1; // pouco verde
+        if (ratio >= 10) return 1; // verde escuro
+        return (ratio - 2) / 8; // escala linear entre 2x e 10x
+      }
+
+      function setRowColors() {
+        const rows = document.querySelectorAll("tbody tr");
+        rows.forEach((row) => {
+          const volumeCell = row.querySelector(".volume-cell");
+          const volume = parseFloat(volumeCell.dataset.volume);
+          const avgVolume = parseFloat(volumeCell.dataset.avgVolume);
+          const intensity = calculateGreenIntensity(volume, avgVolume);
+          const greenColor = `rgba(0, 255, 0, ${intensity})`;
+          volumeCell.style.backgroundColor = greenColor;
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", setRowColors);
+    </script>
   </head>
   <body>
     <div class="container">
@@ -46,7 +71,13 @@
               <td>{{ item.description }}</td>
               <td>{{ item.recommendation_mark }}</td>
               <td>{{ item.volume_change }}%</td>
-              <td>{{ item.volume }}</td>
+              <td
+                class="volume-cell"
+                data-volume="{{ item.volume }}"
+                data-avg-volume="{{ item.average_volume_30d_calc }}"
+              >
+                {{ item.volume }}
+              </td>
               <td>{{ item.average_volume_30d_calc }}</td>
               <td>{{ item.average_volume_10d_calc }}</td>
               <td>{{ item.net_margin_fy }}</td>

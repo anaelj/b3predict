@@ -57,6 +57,7 @@ def index():
             "average_volume_10d_calc": average_volume_10d_calc,
             "net_margin_fy": net_margin_fy,
             "dividends_yield_current": dividends_yield_current,
+            "volume_signal": volume > average_volume_30d_calc and volume > average_volume_10d_calc
         })
     
     # Ordena os dados por 'volume_change'

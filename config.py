@@ -39,10 +39,15 @@ payload = {
     "exchange"    
 	],
 	"filter": [
+		# {
+		# 	"left": "volume",
+		# 	"operation": "greater",
+		# 	"right": "average_volume_10d_calc"
+		# },
 		{
-			"left": "volume",
+			"left": "average_volume_10d_calc",
 			"operation": "greater",
-			"right": "average_volume_10d_calc"
+			"right": "average_volume_30d_calc"
 		},
 		{
 			"left": "volume_change",

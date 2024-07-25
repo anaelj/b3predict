@@ -36,14 +36,14 @@ payload = {
     "High.3M",
     "Low.3M", 
     "current_ratio_fq", #liquidez corrente
-    "exchange"    
+    "Perf.Y"    
 	],
 	"filter": [
-		# {
-		# 	"left": "volume",
-		# 	"operation": "greater",
-		# 	"right": "average_volume_10d_calc"
-		# },
+		{
+			"left": "volume",
+			"operation": "greater",
+			"right": "average_volume_10d_calc"
+		},
 		{
 			"left": "average_volume_10d_calc",
 			"operation": "greater",
@@ -67,7 +67,7 @@ payload = {
     {
     "left": "dividends_yield_current",
     "operation": "greater",
-    "right": 5
+    "right": 0
 		},
 		{
 			"left": "type",
@@ -91,99 +91,6 @@ payload = {
 	"markets": [
 		"brazil"
 	],
-	"filter2": {
-		"operator": "and",
-		"operands": [
-			{
-				"operation": {
-					"operator": "or",
-					"operands": [
-						{
-							"operation": {
-								"operator": "and",
-								"operands": [
-									{
-										"expression": {
-											"left": "type",
-											"operation": "equal",
-											"right": "stock"
-										}
-									},
-									{
-										"expression": {
-											"left": "typespecs",
-											"operation": "has",
-											"right": [
-												"common"
-											]
-										}
-									}
-								]
-							}
-						},
-						{
-							"operation": {
-								"operator": "and",
-								"operands": [
-									{
-										"expression": {
-											"left": "type",
-											"operation": "equal",
-											"right": "stock"
-										}
-									},
-									{
-										"expression": {
-											"left": "typespecs",
-											"operation": "has",
-											"right": [
-												"preferred"
-											]
-										}
-									}
-								]
-							}
-						},
-						{
-							"operation": {
-								"operator": "and",
-								"operands": [
-									{
-										"expression": {
-											"left": "type",
-											"operation": "equal",
-											"right": "dr"
-										}
-									}
-								]
-							}
-						},
-						{
-							"operation": {
-								"operator": "and",
-								"operands": [
-									{
-										"expression": {
-											"left": "type",
-											"operation": "equal",
-											"right": "fund"
-										}
-									},
-									{
-										"expression": {
-											"left": "typespecs",
-											"operation": "has_none_of",
-											"right": [
-												"etf"
-											]
-										}
-									}
-								]
-							}
-						}
-					]
-				}
-			}
-		]
-	}
+
+
 }

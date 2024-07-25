@@ -1,92 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <title>API Data</title>
-    <link
-      rel="stylesheet"
-      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
-    />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
     <style>
-      .table-wrapper {
-        max-height: 400px;
-        overflow-y: auto;
-      }
-      .table thead th {
-        position: sticky;
-        top: 0;
-        background: #fff;
-        z-index: 1;
-      }
-      .highlight {
-        background-color: #d4edda; /* cor verde clara */
-      }
+        .table-wrapper {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .table thead th {
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 1;
+        }
+        .highlight {
+            background-color: #d4edda; /* cor verde clara */
+        }
     </style>
     <script>
-      function calculateGreenIntensity(volume, avgVolume) {
-        let ratio = volume / avgVolume;
-        if (ratio <= 2) return 0.1; // pouco verde
-        if (ratio >= 10) return 1; // verde escuro
-        return (ratio - 2) / 8; // escala linear entre 2x e 10x
-      }
+        function calculateGreenIntensity(volume, avgVolume) {
+            volume = parseFloat(volume);
+            avgVolume = parseFloat(avgVolume);
 
-      function setRowColors() {
-        const rows = document.querySelectorAll("tbody tr");
-        rows.forEach((row) => {
-          const volumeCell = row.querySelector(".volume-cell");
-          const volume = parseFloat(volumeCell.dataset.volume);
-          const avgVolume = parseFloat(volumeCell.dataset.avgVolume);
-          const intensity = calculateGreenIntensity(volume, avgVolume);
-          const greenColor = `rgba(0, 255, 0, ${intensity})`;
-          volumeCell.style.backgroundColor = greenColor;
-        });
-      }
+            if (isNaN(volume) || isNaN(avgVolume) || avgVolume === 0) {
+                return 0; // Não aplique cor se os valores não forem válidos
+            }
 
-      document.addEventListener("DOMContentLoaded", setRowColors);
+            let ratio = volume / avgVolume;
+            if (ratio <= 2) return 0.1; // pouco verde
+            if (ratio >= 10) return 1; // verde escuro
+            return (ratio - 2) / 8; // escala linear entre 2x e 10x
+        }
+
+        function setRowColors() {
+            const rows = document.querySelectorAll("tbody tr");
+            rows.forEach((row) => {
+                const volumeCell = row.querySelector(".volume-cell");
+                const volume = volumeCell.dataset.volume;
+                const avgVolume = volumeCell.dataset.avgVolume;
+                const intensity = calculateGreenIntensity(volume, avgVolume);
+                const greenColor = `rgba(0, 255, 0, ${intensity})`;
+                volumeCell.style.backgroundColor = greenColor;
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", setRowColors);
+
+        function updateFilter() {
+            const typeSelect = document.getElementById("typeFilter");
+            const selectedType = typeSelect.value;
+            window.location.href = `/?type=${selectedType}`;
+        }
     </script>
-  </head>
-  <body>
+</head>
+<body>
     <div class="container">
-      <h1 class="mt-5">API Data</h1>
-      <p>Total Count: {{ total_count }}</p>
-      <div class="table-wrapper">
-        <table class="table table-striped">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Description</th>
-              <th>Recommendation Mark</th>
-              <th>Volume Change</th>
-              <th>Volume</th>
-              <th>Average Volume (30d)</th>
-              <th>Average Volume (10d)</th>
-              <th>MLiq</th>
-              <th>DY%</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for item in data %}
-            <tr>
-              <td>{{ item.name }}</td>
-              <td>{{ item.description }}</td>
-              <td>{{ item.recommendation_mark }}</td>
-              <td>{{ item.volume_change }}%</td>
-              <td
-                class="volume-cell"
-                data-volume="{{ item.volume }}"
-                data-avg-volume="{{ item.average_volume_30d_calc }}"
-              >
-                {{ item.volume }}
-              </td>
-              <td>{{ item.average_volume_30d_calc }}</td>
-              <td>{{ item.average_volume_10d_calc }}</td>
-              <td>{{ item.net_margin_fy }}</td>
-              <td>{{ item.dividends_yield_current }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+        <h1 class="mt-5">API Data</h1>
+        <label for="typeFilter">Filter by Type:</label>
+        <select id="typeFilter" class="form-control mb-3" onchange="updateFilter()">
+            <option value="stock" {% if selected_type == 'stock' %}selected{% endif %}>Stock</option>
+            <option value="dr" {% if selected_type == 'dr' %}selected{% endif %}>DR</option>
+        </select>
+        <p>Total Count: {{ total_count }}</p>
+        <div class="table-wrapper">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Recommendation Mark</th>
+                        <th>Volume Change</th>
+                        <th>Volume</th>
+                        <th>Average Volume (30d)</th>
+                        <th>Average Volume (10d)</th>
+                        <th>MLiq</th>
+                        <th>DY%</th>
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in data %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.description }}</td>
+                        <td>{{ item.recommendation_mark }}</td>
+                        <td>{{ item.volume_change }}%</td>
+                        <td class="volume-cell" data-volume="{{ item.volume }}" data-avg-volume="{{ item.average_volume_30d_calc }}">{{ item.volume | format_number}}</td>
+                        <td>{{ item.average_volume_30d_calc | format_number}}</td>
+                        <td>{{ item.average_volume_10d_calc | format_number}}</td>
+                        <td>{{ item.net_margin_fy }}</td>
+                        <td>{{ item.dividends_yield_current }}</td>
+                        
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-  </body>
+</body>
 </html>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "./../firebase";
+import { fetchAndUpdateDocumentByID } from "../utils/firebase";
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState();
@@ -63,7 +64,7 @@ const Transactions = () => {
 
       setTransactions(
         sortedData.filter(
-          (item) => item["Movimentação"] === "Transferência - Liquidação"
+          (item) => item["Movimentacao"] === "Transferência - Liquidação"
         )
       );
     } catch (error) {
@@ -89,6 +90,14 @@ const Transactions = () => {
     setTransactions(array);
   }
 
+  const clearChild = (data) => {
+    data.children = [];
+    data["balance"] = data.Quantidade;
+    data["profit"] = 0;
+    fetchAndUpdateDocumentByID({ collectionName: cpf, data });
+    updateTransaction(data);
+  };
+
   useEffect(() => {
     console.log(transactions);
   }, [transactions]);
@@ -108,54 +117,41 @@ const Transactions = () => {
       currentBalance > newChildBalance ? 0 : newChildBalance - currentBalance;
     child["balance"] = newChildBalance;
     updateTransaction(child);
+    fetchAndUpdateDocumentByID({ collectionName: cpf, data: child });
 
-    setTransactions((prevRows) =>
-      prevRows.map((row) => {
-        if (row.ID === father.ID) {
-          let childID = `${row.ID}`;
+    const quantity =
+      child.Quantidade > currentBalance
+        ? currentBalance
+        : oldChildBalance || child.Quantidade;
 
-          const quantity =
-            child.Quantidade > currentBalance
-              ? currentBalance
-              : oldChildBalance || child.Quantidade;
+    const newChild = {
+      ...child,
+      ID: child.ID,
+      Quantidade: quantity,
+      Valor_da_Operacao: quantity * child["Preco_unitario"],
+    };
 
-          const newChild = {
-            ...child,
-            ID: childID,
-            Quantidade: quantity,
-            "Valor da Operação": quantity * child["Preço unitário"],
-          };
-
-          // const totalChild = quantity * row["Preço unitário"];
-
-          const updatedChildren = row?.children
-            ? [...row?.children, { ...newChild }]
-            : [{ ...newChild }];
-          const { totalSum, quantitySum } = updatedChildren.reduce(
-            (totals, child) => {
-              return {
-                totalSum: totals.totalSum + (child["Valor da Operação"] || 0),
-                quantitySum: totals.quantitySum + (child?.Quantidade || 0),
-              };
-            },
-            { totalSum: 0, quantitySum: 0 }
-          );
-
-          father.balance = row.Quantidade - quantitySum;
-          father.total = row["Valor da Operação"] - totalSum;
-
-          console.log("totalSum", totalSum);
-
-          return {
-            ...row,
-            children: updatedChildren,
-            balance: row.Quantidade - quantitySum,
-            profit: row["Valor da Operação"] - totalSum,
-          };
-        }
-        return row;
-      })
+    const updatedChildren = father?.children
+      ? [...father?.children, { ...newChild }]
+      : [{ ...newChild }];
+    const { totalSum, quantitySum } = updatedChildren.reduce(
+      (totals, child) => {
+        return {
+          totalSum: totals.totalSum + (child["Valor_da_Operacao"] || 0),
+          quantitySum: totals.quantitySum + (child?.Quantidade || 0),
+        };
+      },
+      { totalSum: 0, quantitySum: 0 }
     );
+
+    father.balance = father.Quantidade - quantitySum;
+    father.total = father["Valor_da_Operacao"] - totalSum;
+    father.children = updatedChildren;
+    father.balance = father.Quantidade - quantitySum;
+    father.profit = father["Valor_da_Operacao"] - totalSum;
+
+    updateTransaction(father);
+    fetchAndUpdateDocumentByID({ collectionName: cpf, data: father });
   };
 
   const handleSelectSellTransaction = (transaction) => {
@@ -169,10 +165,10 @@ const Transactions = () => {
     const {
       Produto,
       Quantidade,
-      "Preço unitário": price,
-      "Entrada/Saída": type,
-      "Valor da Operação": total,
-      Movimentação: category,
+      Preco_unitario: price,
+      Entrada_Saida: type,
+      Valor_da_Operacao: total,
+      Movimentacao: category,
       Data: date,
       balance,
       profit,
@@ -195,7 +191,6 @@ const Transactions = () => {
           <td>{balance}</td>
           <td>{profit?.toFixed(2)}</td>
           <td>
-            {/* Dropdown para adicionar child */}
             <button
               disabled={transaction?.balance == 0}
               style={{
@@ -210,6 +205,15 @@ const Transactions = () => {
             >
               Selecionar
             </button>
+            <button
+              style={{
+                backgroundColor:
+                  transaction.ID === selectedSell.ID ? "orange" : "gray",
+              }}
+              onClick={() => clearChild(transaction)}
+            >
+              Clear
+            </button>
           </td>
         </tr>
         {children &&
@@ -219,8 +223,8 @@ const Transactions = () => {
               <td colSpan="3"></td>
               <td>{child.Data}</td>
               <td>{child.Quantidade}</td>
-              <td>{child["Preço unitário"]}</td>
-              <td>{child["Valor da Operação"]}</td>
+              <td>{child.Preco_unitario}</td>
+              <td>{child.Valor_da_Operacao}</td>
               <td colSpan="4"></td>
             </tr>
           ))}
@@ -269,9 +273,9 @@ const Transactions = () => {
             <th>Produto</th>
             <th>Tipo</th>
             <th>Quantidade</th>
-            <th>Preço Unitário</th>
+            <th>Preco_unitario</th>
             <th>Total</th>
-            <th>Entrada/Saída</th>
+            <th>Entrada_Saida</th>
             <th>Saldo</th>
             <th>Lucro</th>
           </tr>

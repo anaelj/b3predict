@@ -9,13 +9,14 @@ const Transactions = () => {
   const [loaded, setLoaded] = useState(false);
   const [yearFilter, setYearFilter] = useState("");
   const [monthFilter, setMonthFilter] = useState("");
-  const [productFilter, setProductFilter] = useState("");
+  const [productFilter, setProductFilter] = useState("BLAU");
+  const [selectedSell, setSelectedSell] = useState("");
 
   const handleYearChange = (e) => setYearFilter(e.target.value);
   const handleMonthChange = (e) => setMonthFilter(e.target.value);
   const handleProductChange = (e) => setProductFilter(e.target.value);
 
-  const filteredRows = rows?.filter((transaction) => {
+  const filteredRows = transactions?.filter((transaction) => {
     if (!transaction) return false;
 
     const { Data: date, Produto } = transaction;
@@ -42,24 +43,28 @@ const Transactions = () => {
   const fetchData = async () => {
     try {
       if (!cpf) return;
-      const querySnapshot = await getDocs(collection(db, cpf));
-      const transactionsData = querySnapshot.docs.map((doc) => doc.data());
 
-      const sortedData = transactionsData.sort(
-        (a, b) => parseDate(a["Data"]) - parseDate(b["Data"])
-      );
+      let sortedData;
+      const sortedDataLocal = localStorage.getItem(`transaction-${cpf}`);
+      if (sortedDataLocal) {
+        sortedData = JSON.parse(sortedDataLocal);
+      } else {
+        const querySnapshot = await getDocs(collection(db, cpf));
+        const transactionsData = querySnapshot.docs.map((doc) => doc.data());
+
+        sortedData = transactionsData.sort(
+          (a, b) => parseDate(a["Data"]) - parseDate(b["Data"])
+        );
+
+        localStorage.setItem(`transaction-${cpf}`, JSON.stringify(sortedData));
+      }
+
+      console.log(sortedData);
 
       setTransactions(
-        sortedData
-          .filter(
-            (item) => item["Movimentação"] === "Transferência - Liquidação"
-          )
-          .map((item) => ({
-            ...item,
-            balance: item["Entrada/Saída"]?.includes("Debito")
-              ? 0
-              : item.Quantidade,
-          }))
+        sortedData.filter(
+          (item) => item["Movimentação"] === "Transferência - Liquidação"
+        )
       );
     } catch (error) {
       console.error("Erro ao buscar dados: ", error);
@@ -73,95 +78,90 @@ const Transactions = () => {
     }
   };
 
-  const updateBalance = (data, id, value, product = null) => {
-    const index = data.findIndex((item) =>
-      id
-        ? item.ID === id && item.balance > 0
-        : item.Produto === product && item.balance > 0
-    );
+  function updateTransaction(updatedObject) {
+    const array = [...transactions];
+    const index = array.findIndex((item) => item.ID === updatedObject.ID);
 
-    if (index === -1) return { price: 0 };
-    let price = 0;
-
-    if (data[index].balance >= value) {
-      if (data[index].Produto.includes("BLAU3")) {
-        console.log("DATA1", data[index]);
-      }
-      data[index].balance -= value;
-      price = data[index].price;
-    } else {
-      if (data[index].Produto.includes("BLAU3")) {
-        console.log("DATA2", data[index]);
-        console.log("data, id, value, product ", data, id, value, product);
-      }
-      const updated = updateBalance(
-        data,
-        null,
-        value - data[index].balance,
-        data[index].Produto
-      );
-      data[index].balance = 0;
-
-      price = (data[index].price + updated.price) / 2;
-    }
-
-    return { ...data[index], price };
-  };
-
-  const updateDebitTransaction = (data, id, value) => {
-    const index = data.findIndex((item) => item.ID === id);
     if (index !== -1) {
-      data[index].profit = (data[index].price - value) * data[index].Quantidade;
-      return data[index];
-    } else {
-      console.log("ID não encontrado.");
+      array[index] = updatedObject;
     }
-  };
 
-  const makeData = () => {
-    if (!transactions) return;
-    let newData = [
-      ...transactions.map((item) => ({
-        ...item,
-        price: item["Preço unitário"],
-        type: item["Entrada/Saída"],
-      })),
-    ];
-
-    // console.log("newData", newData);
-    newData
-      .filter((debitTransaction) => debitTransaction.type?.includes("Debito"))
-      .forEach((debitTransaction) => {
-        newData
-          .filter(
-            (creditTransaction) =>
-              creditTransaction.type?.includes("Credito") &&
-              creditTransaction.balance > 0 &&
-              creditTransaction.Produto === debitTransaction.Produto
-          )
-          .sort((a, b) => parseDate(b["Data"]) - parseDate(a["Data"]))
-          .forEach((creditTransaction) => {
-            // if (debitTransaction.Produto.includes("BLAU3")) {
-            //   console.log("debitTransaction", debitTransaction);
-            //   console.log("creditTransaction", creditTransaction);
-            // }
-            const { price: buyPrice } = updateBalance(
-              newData,
-              creditTransaction.ID,
-              debitTransaction.Quantidade
-            );
-            // updateDebitTransaction(newData, debitTransaction.ID, buyPrice);
-          });
-      });
-
-    setRows(newData);
-  };
+    setTransactions(array);
+  }
 
   useEffect(() => {
-    makeData();
-    setLoaded(true);
-    // }
+    console.log(transactions);
   }, [transactions]);
+
+  const handleAddChild = (father, child) => {
+    const currentBalance = father?.balance || father.Quantidade;
+
+    if (father?.balance == 0) {
+      alert("Não existe saldo para esta operação");
+      return;
+    }
+
+    const oldChildBalance = child?.balance;
+
+    let newChildBalance = child?.balance || child.Quantidade;
+    newChildBalance =
+      currentBalance > newChildBalance ? 0 : newChildBalance - currentBalance;
+    child["balance"] = newChildBalance;
+    updateTransaction(child);
+
+    setTransactions((prevRows) =>
+      prevRows.map((row) => {
+        if (row.ID === father.ID) {
+          let childID = `${row.ID}`;
+
+          const quantity =
+            child.Quantidade > currentBalance
+              ? currentBalance
+              : oldChildBalance || child.Quantidade;
+
+          const newChild = {
+            ...child,
+            ID: childID,
+            Quantidade: quantity,
+            "Valor da Operação": quantity * child["Preço unitário"],
+          };
+
+          // const totalChild = quantity * row["Preço unitário"];
+
+          const updatedChildren = row?.children
+            ? [...row?.children, { ...newChild }]
+            : [{ ...newChild }];
+          const { totalSum, quantitySum } = updatedChildren.reduce(
+            (totals, child) => {
+              return {
+                totalSum: totals.totalSum + (child["Valor da Operação"] || 0),
+                quantitySum: totals.quantitySum + (child?.Quantidade || 0),
+              };
+            },
+            { totalSum: 0, quantitySum: 0 }
+          );
+
+          father.balance = row.Quantidade - quantitySum;
+          father.total = row["Valor da Operação"] - totalSum;
+
+          console.log("totalSum", totalSum);
+
+          return {
+            ...row,
+            children: updatedChildren,
+            balance: row.Quantidade - quantitySum,
+            profit: row["Valor da Operação"] - totalSum,
+          };
+        }
+        return row;
+      })
+    );
+  };
+
+  const handleSelectSellTransaction = (transaction) => {
+    setSelectedSell(transaction);
+    setProductFilter(transaction.Produto.substring(0, 5));
+  };
 
   const table = filteredRows?.map((transaction, index) => {
     if (!transaction) return;
@@ -171,28 +171,60 @@ const Transactions = () => {
       Quantidade,
       "Preço unitário": price,
       "Entrada/Saída": type,
+      "Valor da Operação": total,
       Movimentação: category,
       Data: date,
       balance,
       profit,
+      ID,
+      children,
     } = transaction;
 
-    const totalValue = isNumeric(price) * parseFloat(Quantidade);
-
     return (
-      <tr key={index}>
-        <td>{date}</td>
-        <td>{Produto}</td>
-        <td>{category}</td>
-        <td>{Quantidade}</td>
-        <td>{price}</td>
-        <td>{totalValue.toFixed(2)}</td>
-        <td style={{ backgroundColor: type === "Credito" ? "green" : "red" }}>
-          {type}
-        </td>
-        <td>{balance}</td>
-        <td>{profit?.toFixed(2)}</td>
-      </tr>
+      <>
+        <tr key={index}>
+          <td>{date}</td>
+          <td>{Produto}</td>
+          <td>{category}</td>
+          <td>{Quantidade}</td>
+          <td>{price}</td>
+          <td>{parseFloat(total).toFixed(2)}</td>
+          <td style={{ backgroundColor: type === "Credito" ? "green" : "red" }}>
+            {type}
+          </td>
+          <td>{balance}</td>
+          <td>{profit?.toFixed(2)}</td>
+          <td>
+            {/* Dropdown para adicionar child */}
+            <button
+              disabled={transaction?.balance == 0}
+              style={{
+                backgroundColor:
+                  transaction.ID === selectedSell.ID ? "orange" : "gray",
+              }}
+              onClick={() =>
+                type === "Credito"
+                  ? handleAddChild(selectedSell, transaction)
+                  : handleSelectSellTransaction(transaction)
+              }
+            >
+              Selecionar
+            </button>
+          </td>
+        </tr>
+        {children &&
+          children.length > 0 &&
+          children.map((child) => (
+            <tr key={`${child.ID}}`}>
+              <td colSpan="3"></td>
+              <td>{child.Data}</td>
+              <td>{child.Quantidade}</td>
+              <td>{child["Preço unitário"]}</td>
+              <td>{child["Valor da Operação"]}</td>
+              <td colSpan="4"></td>
+            </tr>
+          ))}
+      </>
     );
   });
 

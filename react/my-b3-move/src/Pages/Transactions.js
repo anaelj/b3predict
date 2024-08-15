@@ -17,24 +17,28 @@ const Transactions = () => {
   const handleMonthChange = (e) => setMonthFilter(e.target.value);
   const handleProductChange = (e) => setProductFilter(e.target.value);
 
-  const filteredRows = transactions?.filter((transaction) => {
-    if (!transaction) return false;
+  const filteredRows = transactions
+    ?.filter((item) => item["Movimentacao"] === "Transferência - Liquidação")
+    ?.filter((transaction) => {
+      if (!transaction) return false;
 
-    const { Data: date, Produto } = transaction;
-    const transactionDate = new Date(date);
-    const transactionYear = transactionDate.getFullYear();
-    const transactionMonth = transactionDate.getMonth() + 1; // Janeiro é 0
+      const { Data: date, Produto } = transaction;
+      const transactionDate = new Date(date);
+      const transactionYear = transactionDate.getFullYear();
+      const transactionMonth = transactionDate.getMonth() + 1; // Janeiro é 0
 
-    const yearMatch = yearFilter
-      ? transactionYear === parseInt(yearFilter)
-      : true;
-    const monthMatch = monthFilter
-      ? transactionMonth === parseInt(monthFilter)
-      : true;
-    const productMatch = productFilter ? Produto.includes(productFilter) : true;
+      const yearMatch = yearFilter
+        ? transactionYear === parseInt(yearFilter)
+        : true;
+      const monthMatch = monthFilter
+        ? transactionMonth === parseInt(monthFilter)
+        : true;
+      const productMatch = productFilter
+        ? Produto.includes(productFilter)
+        : true;
 
-    return yearMatch && monthMatch && productMatch;
-  });
+      return yearMatch && monthMatch && productMatch;
+    });
 
   const parseDate = (str) => {
     const [day, month, year] = str.split("/");
@@ -62,11 +66,7 @@ const Transactions = () => {
 
       console.log(sortedData);
 
-      setTransactions(
-        sortedData.filter(
-          (item) => item["Movimentacao"] === "Transferência - Liquidação"
-        )
-      );
+      setTransactions(sortedData);
     } catch (error) {
       console.error("Erro ao buscar dados: ", error);
     }
@@ -88,6 +88,7 @@ const Transactions = () => {
     }
 
     setTransactions(array);
+    localStorage.setItem(`transaction-${cpf}`, JSON.stringify(array));
   }
 
   const clearChild = (data) => {
@@ -98,6 +99,34 @@ const Transactions = () => {
     updateTransaction(data);
   };
 
+  const { profitSum, interestEquitySum, dividendSum } =
+    transactions?.length > 0
+      ? transactions
+          ?.filter((item) => item.Data.includes(yearFilter))
+          ?.reduce(
+            (accumulator, currentValue) => {
+              const profitSum = currentValue?.profit || 0;
+              const interestEquitySum = currentValue?.Movimentacao.includes(
+                "Juros"
+              )
+                ? currentValue?.Valor_da_Operacao || 0
+                : 0;
+              const dividendSum = currentValue?.Movimentacao.includes(
+                "Dividendo"
+              )
+                ? currentValue?.Valor_da_Operacao || 0
+                : 0;
+
+              accumulator.profitSum += profitSum;
+              accumulator.dividendSum += dividendSum;
+              accumulator.interestEquitySum += interestEquitySum;
+
+              return accumulator;
+            },
+            { profitSum: 0, interestEquitySum: 0, dividendSum: 0 }
+          )
+      : { profitSum: 0, interestEquitySum: 0, dividendSum: 0 };
+
   useEffect(() => {
     console.log(transactions);
   }, [transactions]);
@@ -107,6 +136,11 @@ const Transactions = () => {
 
     if (father?.balance == 0) {
       alert("Não existe saldo para esta operação");
+      return;
+    }
+
+    if (father?.Produto.substring(0, 5) !== child.Produto.substring(0, 5)) {
+      alert("Selecione o mesmo ativo!");
       return;
     }
 
@@ -235,6 +269,15 @@ const Transactions = () => {
   return (
     <div>
       <div>
+        <h2>Soma Operações: {Number(profitSum).toFixed(2)}</h2>
+        <h2>
+          Juros Sobre Capital Próprio: {Number(interestEquitySum).toFixed(2)}
+        </h2>
+        <h2>Dividendo: {Number(dividendSum).toFixed(2)}</h2>
+        <h2>
+          Total:{" "}
+          {Number(dividendSum + profitSum + interestEquitySum).toFixed(2)}
+        </h2>
         <div>
           <label>Ano</label>
           <input

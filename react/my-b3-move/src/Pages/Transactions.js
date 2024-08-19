@@ -5,11 +5,11 @@ import { fetchAndUpdateDocumentByID } from "../utils/firebase";
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState();
-  const [cpf, setCpf] = useState("95474358172");
+  const [cpf, setCpf] = useState(localStorage.getItem("best-choice-cpf"));
 
   const [yearFilter, setYearFilter] = useState("");
   const [monthFilter, setMonthFilter] = useState("");
-  const [productFilter, setProductFilter] = useState("BLAU");
+  const [productFilter, setProductFilter] = useState("");
   const [selectedSell, setSelectedSell] = useState("");
 
   const handleYearChange = (e) => setYearFilter(e.target.value);
@@ -47,6 +47,8 @@ const Transactions = () => {
   const fetchData = async () => {
     try {
       if (!cpf) return;
+
+      localStorage.setItem("best-choice-cpf", cpf);
 
       let sortedData;
       const sortedDataLocal = localStorage.getItem(`transaction-${cpf}`);

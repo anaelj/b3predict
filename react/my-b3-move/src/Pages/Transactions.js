@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "./../firebase";
 import { fetchAndUpdateDocumentByID } from "../utils/firebase";
@@ -6,8 +6,7 @@ import { fetchAndUpdateDocumentByID } from "../utils/firebase";
 const Transactions = () => {
   const [transactions, setTransactions] = useState();
   const [cpf, setCpf] = useState("95474358172");
-  const [rows, setRows] = useState([]);
-  const [loaded, setLoaded] = useState(false);
+
   const [yearFilter, setYearFilter] = useState("");
   const [monthFilter, setMonthFilter] = useState("");
   const [productFilter, setProductFilter] = useState("BLAU");
@@ -71,13 +70,6 @@ const Transactions = () => {
       console.error("Erro ao buscar dados: ", error);
     }
   };
-  const isNumeric = (value) => {
-    try {
-      return parseFloat(value);
-    } catch (error) {
-      return 0;
-    }
-  };
 
   function updateTransaction(updatedObject) {
     const array = [...transactions];
@@ -127,14 +119,10 @@ const Transactions = () => {
           )
       : { profitSum: 0, interestEquitySum: 0, dividendSum: 0 };
 
-  useEffect(() => {
-    console.log(transactions);
-  }, [transactions]);
-
   const handleAddChild = (father, child) => {
     const currentBalance = father?.balance || father.Quantidade;
 
-    if (father?.balance == 0) {
+    if (father?.balance === 0) {
       alert("Não existe saldo para esta operação");
       return;
     }
@@ -194,7 +182,7 @@ const Transactions = () => {
   };
 
   const table = filteredRows?.map((transaction, index) => {
-    if (!transaction) return;
+    if (!transaction) return [];
 
     const {
       Produto,
@@ -206,7 +194,7 @@ const Transactions = () => {
       Data: date,
       balance,
       profit,
-      ID,
+
       children,
     } = transaction;
 
@@ -226,7 +214,7 @@ const Transactions = () => {
           <td>{profit?.toFixed(2)}</td>
           <td>
             <button
-              disabled={transaction?.balance == 0}
+              disabled={transaction?.balance === 0}
               style={{
                 backgroundColor:
                   transaction.ID === selectedSell.ID ? "orange" : "gray",

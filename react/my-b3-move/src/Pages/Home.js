@@ -1,9 +1,10 @@
 // src/App.js
 import React, { useState } from "react";
 import * as XLSX from "xlsx";
-import { db } from "./../firebase"; // Importa a configuração do Firebase
+import { db } from "./../firebase";
 import { collection, addDoc, query, where, getDocs } from "firebase/firestore"; // Importar do Firestore modular
 import CryptoJS from "crypto-js";
+import { sanitizeObjectKeys } from "../utils/objects";
 
 function App() {
   const [file, setFile] = useState(null);
@@ -54,12 +55,14 @@ function App() {
             return obj;
           }, {});
 
+          dataObject = sanitizeObjectKeys(dataObject);
+
           const ID = CryptoJS.SHA256(JSON.stringify(dataObject)).toString(
             CryptoJS.enc.Hex
           );
           dataObject = { ...dataObject, ID };
 
-          const q = query(collectionRef, where("ID", "==", ID)); // Substitua 'ID' pelo campo relevante
+          const q = query(collectionRef, where("ID", "==", ID));
           const querySnapshot = await getDocs(q);
 
           if (querySnapshot.empty) {

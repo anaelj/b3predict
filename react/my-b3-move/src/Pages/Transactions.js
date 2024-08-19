@@ -1,38 +1,43 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "./../firebase";
+import { fetchAndUpdateDocumentByID } from "../utils/firebase";
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState();
   const [cpf, setCpf] = useState("95474358172");
-  const [rows, setRows] = useState([]);
-  const [loaded, setLoaded] = useState(false);
+
   const [yearFilter, setYearFilter] = useState("");
   const [monthFilter, setMonthFilter] = useState("");
-  const [productFilter, setProductFilter] = useState("");
+  const [productFilter, setProductFilter] = useState("BLAU");
+  const [selectedSell, setSelectedSell] = useState("");
 
   const handleYearChange = (e) => setYearFilter(e.target.value);
   const handleMonthChange = (e) => setMonthFilter(e.target.value);
   const handleProductChange = (e) => setProductFilter(e.target.value);
 
-  const filteredRows = rows?.filter((transaction) => {
-    if (!transaction) return false;
+  const filteredRows = transactions
+    ?.filter((item) => item["Movimentacao"] === "Transferência - Liquidação")
+    ?.filter((transaction) => {
+      if (!transaction) return false;
 
-    const { Data: date, Produto } = transaction;
-    const transactionDate = new Date(date);
-    const transactionYear = transactionDate.getFullYear();
-    const transactionMonth = transactionDate.getMonth() + 1; // Janeiro é 0
+      const { Data: date, Produto } = transaction;
+      const transactionDate = new Date(date);
+      const transactionYear = transactionDate.getFullYear();
+      const transactionMonth = transactionDate.getMonth() + 1; // Janeiro é 0
 
-    const yearMatch = yearFilter
-      ? transactionYear === parseInt(yearFilter)
-      : true;
-    const monthMatch = monthFilter
-      ? transactionMonth === parseInt(monthFilter)
-      : true;
-    const productMatch = productFilter ? Produto.includes(productFilter) : true;
+      const yearMatch = yearFilter
+        ? transactionYear === parseInt(yearFilter)
+        : true;
+      const monthMatch = monthFilter
+        ? transactionMonth === parseInt(monthFilter)
+        : true;
+      const productMatch = productFilter
+        ? Produto.includes(productFilter)
+        : true;
 
-    return yearMatch && monthMatch && productMatch;
-  });
+      return yearMatch && monthMatch && productMatch;
+    });
 
   const parseDate = (str) => {
     const [day, month, year] = str.split("/");
@@ -42,163 +47,225 @@ const Transactions = () => {
   const fetchData = async () => {
     try {
       if (!cpf) return;
-      const querySnapshot = await getDocs(collection(db, cpf));
-      const transactionsData = querySnapshot.docs.map((doc) => doc.data());
 
-      const sortedData = transactionsData.sort(
-        (a, b) => parseDate(a["Data"]) - parseDate(b["Data"])
-      );
+      let sortedData;
+      const sortedDataLocal = localStorage.getItem(`transaction-${cpf}`);
+      if (sortedDataLocal) {
+        sortedData = JSON.parse(sortedDataLocal);
+      } else {
+        const querySnapshot = await getDocs(collection(db, cpf));
+        const transactionsData = querySnapshot.docs.map((doc) => doc.data());
 
-      setTransactions(
-        sortedData
-          .filter(
-            (item) => item["Movimentação"] === "Transferência - Liquidação"
-          )
-          .map((item) => ({
-            ...item,
-            balance: item["Entrada/Saída"]?.includes("Debito")
-              ? 0
-              : item.Quantidade,
-          }))
-      );
+        sortedData = transactionsData.sort(
+          (a, b) => parseDate(a["Data"]) - parseDate(b["Data"])
+        );
+
+        localStorage.setItem(`transaction-${cpf}`, JSON.stringify(sortedData));
+      }
+
+      console.log(sortedData);
+
+      setTransactions(sortedData);
     } catch (error) {
       console.error("Erro ao buscar dados: ", error);
     }
   };
-  const isNumeric = (value) => {
-    try {
-      return parseFloat(value);
-    } catch (error) {
-      return 0;
+
+  function updateTransaction(updatedObject) {
+    const array = [...transactions];
+    const index = array.findIndex((item) => item.ID === updatedObject.ID);
+
+    if (index !== -1) {
+      array[index] = updatedObject;
     }
+
+    setTransactions(array);
+    localStorage.setItem(`transaction-${cpf}`, JSON.stringify(array));
+  }
+
+  const clearChild = (data) => {
+    data.children = [];
+    data["balance"] = data.Quantidade;
+    data["profit"] = 0;
+    fetchAndUpdateDocumentByID({ collectionName: cpf, data });
+    updateTransaction(data);
   };
 
-  const updateBalance = (data, id, value, product = null) => {
-    const index = data.findIndex((item) =>
-      id
-        ? item.ID === id && item.balance > 0
-        : item.Produto === product && item.balance > 0
+  const { profitSum, interestEquitySum, dividendSum } =
+    transactions?.length > 0
+      ? transactions
+          ?.filter((item) => item.Data.includes(yearFilter))
+          ?.reduce(
+            (accumulator, currentValue) => {
+              const profitSum = currentValue?.profit || 0;
+              const interestEquitySum = currentValue?.Movimentacao.includes(
+                "Juros"
+              )
+                ? currentValue?.Valor_da_Operacao || 0
+                : 0;
+              const dividendSum = currentValue?.Movimentacao.includes(
+                "Dividendo"
+              )
+                ? currentValue?.Valor_da_Operacao || 0
+                : 0;
+
+              accumulator.profitSum += profitSum;
+              accumulator.dividendSum += dividendSum;
+              accumulator.interestEquitySum += interestEquitySum;
+
+              return accumulator;
+            },
+            { profitSum: 0, interestEquitySum: 0, dividendSum: 0 }
+          )
+      : { profitSum: 0, interestEquitySum: 0, dividendSum: 0 };
+
+  const handleAddChild = (father, child) => {
+    const currentBalance = father?.balance || father.Quantidade;
+
+    if (father?.balance === 0) {
+      alert("Não existe saldo para esta operação");
+      return;
+    }
+
+    if (father?.Produto.substring(0, 5) !== child.Produto.substring(0, 5)) {
+      alert("Selecione o mesmo ativo!");
+      return;
+    }
+
+    const oldChildBalance = child?.balance;
+
+    let newChildBalance = child?.balance || child.Quantidade;
+    newChildBalance =
+      currentBalance > newChildBalance ? 0 : newChildBalance - currentBalance;
+    child["balance"] = newChildBalance;
+    updateTransaction(child);
+    fetchAndUpdateDocumentByID({ collectionName: cpf, data: child });
+
+    const quantity =
+      child.Quantidade > currentBalance
+        ? currentBalance
+        : oldChildBalance || child.Quantidade;
+
+    const newChild = {
+      ...child,
+      ID: child.ID,
+      Quantidade: quantity,
+      Valor_da_Operacao: quantity * child["Preco_unitario"],
+    };
+
+    const updatedChildren = father?.children
+      ? [...father?.children, { ...newChild }]
+      : [{ ...newChild }];
+    const { totalSum, quantitySum } = updatedChildren.reduce(
+      (totals, child) => {
+        return {
+          totalSum: totals.totalSum + (child["Valor_da_Operacao"] || 0),
+          quantitySum: totals.quantitySum + (child?.Quantidade || 0),
+        };
+      },
+      { totalSum: 0, quantitySum: 0 }
     );
 
-    if (index === -1) return { price: 0 };
-    let price = 0;
+    father.balance = father.Quantidade - quantitySum;
+    father.total = father["Valor_da_Operacao"] - totalSum;
+    father.children = updatedChildren;
+    father.balance = father.Quantidade - quantitySum;
+    father.profit = father["Valor_da_Operacao"] - totalSum;
 
-    if (data[index].balance >= value) {
-      if (data[index].Produto.includes("BLAU3")) {
-        console.log("DATA1", data[index]);
-      }
-      data[index].balance -= value;
-      price = data[index].price;
-    } else {
-      if (data[index].Produto.includes("BLAU3")) {
-        console.log("DATA2", data[index]);
-        console.log("data, id, value, product ", data, id, value, product);
-      }
-      const updated = updateBalance(
-        data,
-        null,
-        value - data[index].balance,
-        data[index].Produto
-      );
-      data[index].balance = 0;
-
-      price = (data[index].price + updated.price) / 2;
-    }
-
-    return { ...data[index], price };
+    updateTransaction(father);
+    fetchAndUpdateDocumentByID({ collectionName: cpf, data: father });
   };
 
-  const updateDebitTransaction = (data, id, value) => {
-    const index = data.findIndex((item) => item.ID === id);
-    if (index !== -1) {
-      data[index].profit = (data[index].price - value) * data[index].Quantidade;
-      return data[index];
-    } else {
-      console.log("ID não encontrado.");
-    }
+  const handleSelectSellTransaction = (transaction) => {
+    setSelectedSell(transaction);
+    setProductFilter(transaction.Produto.substring(0, 5));
   };
-
-  const makeData = () => {
-    if (!transactions) return;
-    let newData = [
-      ...transactions.map((item) => ({
-        ...item,
-        price: item["Preço unitário"],
-        type: item["Entrada/Saída"],
-      })),
-    ];
-
-    // console.log("newData", newData);
-    newData
-      .filter((debitTransaction) => debitTransaction.type?.includes("Debito"))
-      .forEach((debitTransaction) => {
-        newData
-          .filter(
-            (creditTransaction) =>
-              creditTransaction.type?.includes("Credito") &&
-              creditTransaction.balance > 0 &&
-              creditTransaction.Produto === debitTransaction.Produto
-          )
-          .sort((a, b) => parseDate(b["Data"]) - parseDate(a["Data"]))
-          .forEach((creditTransaction) => {
-            // if (debitTransaction.Produto.includes("BLAU3")) {
-            //   console.log("debitTransaction", debitTransaction);
-            //   console.log("creditTransaction", creditTransaction);
-            // }
-            const { price: buyPrice } = updateBalance(
-              newData,
-              creditTransaction.ID,
-              debitTransaction.Quantidade
-            );
-            // updateDebitTransaction(newData, debitTransaction.ID, buyPrice);
-          });
-      });
-
-    setRows(newData);
-  };
-
-  useEffect(() => {
-    makeData();
-    setLoaded(true);
-    // }
-  }, [transactions]);
 
   const table = filteredRows?.map((transaction, index) => {
-    if (!transaction) return;
+    if (!transaction) return [];
 
     const {
       Produto,
       Quantidade,
-      "Preço unitário": price,
-      "Entrada/Saída": type,
-      Movimentação: category,
+      Preco_unitario: price,
+      Entrada_Saida: type,
+      Valor_da_Operacao: total,
+      Movimentacao: category,
       Data: date,
       balance,
       profit,
+
+      children,
     } = transaction;
 
-    const totalValue = isNumeric(price) * parseFloat(Quantidade);
-
     return (
-      <tr key={index}>
-        <td>{date}</td>
-        <td>{Produto}</td>
-        <td>{category}</td>
-        <td>{Quantidade}</td>
-        <td>{price}</td>
-        <td>{totalValue.toFixed(2)}</td>
-        <td style={{ backgroundColor: type === "Credito" ? "green" : "red" }}>
-          {type}
-        </td>
-        <td>{balance}</td>
-        <td>{profit?.toFixed(2)}</td>
-      </tr>
+      <>
+        <tr key={index}>
+          <td>{date}</td>
+          <td>{Produto}</td>
+          <td>{category}</td>
+          <td>{Quantidade}</td>
+          <td>{price}</td>
+          <td>{parseFloat(total).toFixed(2)}</td>
+          <td style={{ backgroundColor: type === "Credito" ? "green" : "red" }}>
+            {type}
+          </td>
+          <td>{balance}</td>
+          <td>{profit?.toFixed(2)}</td>
+          <td>
+            <button
+              disabled={transaction?.balance === 0}
+              style={{
+                backgroundColor:
+                  transaction.ID === selectedSell.ID ? "orange" : "gray",
+              }}
+              onClick={() =>
+                type === "Credito"
+                  ? handleAddChild(selectedSell, transaction)
+                  : handleSelectSellTransaction(transaction)
+              }
+            >
+              Selecionar
+            </button>
+            <button
+              style={{
+                backgroundColor:
+                  transaction.ID === selectedSell.ID ? "orange" : "gray",
+              }}
+              onClick={() => clearChild(transaction)}
+            >
+              Clear
+            </button>
+          </td>
+        </tr>
+        {children &&
+          children.length > 0 &&
+          children.map((child) => (
+            <tr key={`${child.ID}}`}>
+              <td colSpan="3"></td>
+              <td>{child.Data}</td>
+              <td>{child.Quantidade}</td>
+              <td>{child.Preco_unitario}</td>
+              <td>{child.Valor_da_Operacao}</td>
+              <td colSpan="4"></td>
+            </tr>
+          ))}
+      </>
     );
   });
 
   return (
     <div>
       <div>
+        <h2>Soma Operações: {Number(profitSum).toFixed(2)}</h2>
+        <h2>
+          Juros Sobre Capital Próprio: {Number(interestEquitySum).toFixed(2)}
+        </h2>
+        <h2>Dividendo: {Number(dividendSum).toFixed(2)}</h2>
+        <h2>
+          Total:{" "}
+          {Number(dividendSum + profitSum + interestEquitySum).toFixed(2)}
+        </h2>
         <div>
           <label>Ano</label>
           <input
@@ -237,9 +304,9 @@ const Transactions = () => {
             <th>Produto</th>
             <th>Tipo</th>
             <th>Quantidade</th>
-            <th>Preço Unitário</th>
+            <th>Preco_unitario</th>
             <th>Total</th>
-            <th>Entrada/Saída</th>
+            <th>Entrada_Saida</th>
             <th>Saldo</th>
             <th>Lucro</th>
           </tr>

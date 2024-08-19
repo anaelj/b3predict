@@ -77,6 +77,7 @@ function App() {
         }
 
         console.log("Dados enviados com sucesso");
+        localStorage.removeItem(`transaction-${cpf}`);
         alert("Dados enviados com sucesso");
       } catch (error) {
         console.error("Erro ao enviar dados: ", error);

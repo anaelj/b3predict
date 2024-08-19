@@ -19,7 +19,7 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+// const analytics = getAnalytics(app);
 // Inicializar o Firestore
 const db = getFirestore(app); // ou getDatabase(app) para Realtime Database
 

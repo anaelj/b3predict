@@ -8,7 +8,7 @@ const createUrlWithParams = (baseUrl, params) => {
   return url;
 };
 
-exports.handler = async function (event) {
+export async function handler(event) {
   const targetUrl =
     event.headers["x-target-url"] || event.queryStringParameters["target-url"];
 
@@ -36,4 +36,4 @@ exports.handler = async function (event) {
       }),
     };
   }
-};
+}

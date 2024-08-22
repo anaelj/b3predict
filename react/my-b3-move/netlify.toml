@@ -16,3 +16,8 @@
   from = "/api/post"
   to = "/.netlify/functions/post"
   status = 200
+
+[[redirects]]
+  from = "/api/hello"
+  to = "/.netlify/functions/hello"
+  status = 200

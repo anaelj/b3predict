@@ -23,12 +23,16 @@ async function fetchApiData(selectedType) {
     ],
   };
 
-  const response = await axios.post(`${API_URL}/post`, payload, {
-    headers: {
-      "Content-Type": "application/json",
-      "x-target-url": url,
-    },
-  });
+  const response = await axios.post(
+    `https://bestchoiceb3.netlify.app/api/post`,
+    payload,
+    {
+      headers: {
+        "Content-Type": "application/json",
+        "x-target-url": url,
+      },
+    }
+  );
 
   console.log(response.data);
 

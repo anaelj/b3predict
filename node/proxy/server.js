@@ -1,74 +1,79 @@
 import express from "express";
-import fetch from "node-fetch";
+import axios from "axios";
+import cors from "cors";
 
 const app = express();
 
+app.use(cors()); // Permite CORS para todas as origens
 app.use(express.json());
 
+const createUrlWithParams = (baseUrl, params) => {
+  const url = new URL(baseUrl);
+  Object.keys(params).forEach((key) =>
+    url.searchParams.append(key, params[key])
+  );
+  return url;
+};
+
 app.get("/api/get", async (req, res) => {
-  const targetUrl = req.query["target-url"];
+  const targetUrl = req.headers["x-target-url"] || req.query["target-url"];
 
   if (!targetUrl) {
     return res.status(400).json({ error: "Target URL is required" });
   }
 
-  const url = new URL(targetUrl);
-  Object.keys(req.query).forEach((key) => {
-    if (key !== "target-url") {
-      url.searchParams.append(key, req.query[key]);
-    }
-  });
+  const url = createUrlWithParams(targetUrl, req.query);
 
   try {
-    const response = await fetch(url.toString(), { method: "GET" });
-    const data = await response.json();
-    res.json(data);
+    const response = await axios.get(url.toString());
+    res.json(response.data);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch data" });
+    res
+      .status(500)
+      .json({ error: "Failed to fetch data", details: error.message });
   }
 });
 
 app.post("/api/post", async (req, res) => {
-  const targetUrl = req.query["target-url"];
+  const targetUrl = req.headers["x-target-url"] || req.query["target-url"];
 
   if (!targetUrl) {
     return res.status(400).json({ error: "Target URL is required" });
   }
 
   try {
-    const response = await fetch(targetUrl, {
-      method: "POST",
+    const response = await axios.post(targetUrl, req.body, {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(req.body),
     });
-    const data = await response.json();
-    res.json(data);
+    console.log(response.data);
+    res.json(response.data);
   } catch (error) {
-    res.status(500).json({ error: "Failed to post data" });
+    res
+      .status(500)
+      .json({ error: "Failed to post data", details: error.message });
   }
 });
 
 app.put("/api/put", async (req, res) => {
-  const targetUrl = req.query["target-url"];
+  const targetUrl = req.headers["x-target-url"] || req.query["target-url"];
 
   if (!targetUrl) {
     return res.status(400).json({ error: "Target URL is required" });
   }
 
   try {
-    const response = await fetch(targetUrl, {
-      method: "PUT",
+    const response = await axios.put(targetUrl, req.body, {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(req.body),
     });
-    const data = await response.json();
-    res.json(data);
+    res.json(response.data);
   } catch (error) {
-    res.status(500).json({ error: "Failed to put data" });
+    res
+      .status(500)
+      .json({ error: "Failed to put data", details: error.message });
   }
 });
 

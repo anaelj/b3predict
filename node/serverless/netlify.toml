@@ -1,6 +1,8 @@
 [build]
   functions = "netlify/functions"
-  command = "npm install" 
+  base    = "node/serverless"
+  publish = "dist" 
+  command = "npm install && npm run build" 
 
 [[redirects]]
   from = "/api/get"

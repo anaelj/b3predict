@@ -1,6 +1,5 @@
 [build]
   functions = "netlify/functions"
-  command = "npm install axios"
 
 [[redirects]]
   from = "/api/get"

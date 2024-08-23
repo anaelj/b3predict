@@ -22,15 +22,19 @@ const Transactions = () => {
       if (!transaction) return false;
 
       const { Data: date, Produto } = transaction;
-      const transactionDate = new Date(date);
-      const transactionYear = transactionDate.getFullYear();
-      const transactionMonth = transactionDate.getMonth() + 1; // Janeiro é 0
+      const [, transactionMonth, transactionYear] = date.split("/");
+      console.log(
+        "transactionMonth, transactionYear",
+        transactionMonth,
+        transactionYear
+      );
+      console.log("monthFilter, yearFilter", monthFilter, yearFilter);
 
       const yearMatch = yearFilter
-        ? transactionYear === parseInt(yearFilter)
+        ? parseInt(transactionYear) === parseInt(yearFilter)
         : true;
       const monthMatch = monthFilter
-        ? transactionMonth === parseInt(monthFilter)
+        ? parseInt(transactionMonth) === parseInt(monthFilter)
         : true;
       const productMatch = productFilter
         ? Produto.includes(productFilter)
@@ -65,7 +69,7 @@ const Transactions = () => {
         localStorage.setItem(`transaction-${cpf}`, JSON.stringify(sortedData));
       }
 
-      console.log(sortedData);
+      // console.log(sortedData);
 
       setTransactions(sortedData);
     } catch (error) {
@@ -93,10 +97,15 @@ const Transactions = () => {
     updateTransaction(data);
   };
 
-  const { profitSum, interestEquitySum, dividendSum } =
+  const { profitSum, interestEquitySum, dividendSum, sellSum } =
     transactions?.length > 0
       ? transactions
           ?.filter((item) => item.Data.includes(yearFilter))
+          ?.filter((item) =>
+            monthFilter > 0
+              ? item.Data.split("/")[1].includes(monthFilter)
+              : item
+          )
           ?.reduce(
             (accumulator, currentValue) => {
               const profitSum = currentValue?.profit || 0;
@@ -111,13 +120,18 @@ const Transactions = () => {
                 ? currentValue?.Valor_da_Operacao || 0
                 : 0;
 
+              const sellSum = currentValue?.Entrada_Saida.includes("Debito")
+                ? currentValue?.Valor_da_Operacao || 0
+                : 0;
+
               accumulator.profitSum += profitSum;
+              accumulator.sellSum += sellSum;
               accumulator.dividendSum += dividendSum;
               accumulator.interestEquitySum += interestEquitySum;
 
               return accumulator;
             },
-            { profitSum: 0, interestEquitySum: 0, dividendSum: 0 }
+            { profitSum: 0, interestEquitySum: 0, dividendSum: 0, sellSum: 0 }
           )
       : { profitSum: 0, interestEquitySum: 0, dividendSum: 0 };
 
@@ -256,6 +270,8 @@ const Transactions = () => {
     );
   });
 
+  console.log();
+
   return (
     <div>
       <div>
@@ -268,6 +284,7 @@ const Transactions = () => {
           Total:{" "}
           {Number(dividendSum + profitSum + interestEquitySum).toFixed(2)}
         </h2>
+        <h2>Vendas: {Number(parseFloat(sellSum)).toFixed(2)}</h2>
         <div>
           <label>Ano</label>
           <input

@@ -1,0 +1,12 @@
+{
+  "name": "funcions",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Anael Medeiros",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "axios": "^1.7.5"
+  }
+  
+}

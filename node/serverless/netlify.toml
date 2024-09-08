@@ -1,7 +1,6 @@
 [build]
   functions = "netlify/functions"
   base    = "node/serverless"
-  publish = "dist" 
   command = "npm install" 
 
 [[redirects]]

@@ -1,4 +1,4 @@
-import axios from "axios";
+const axios = require("axios");
 
 const createUrlWithParams = (baseUrl, params) => {
   const url = new URL(baseUrl);
@@ -8,7 +8,9 @@ const createUrlWithParams = (baseUrl, params) => {
   return url;
 };
 
-export async function handler(event) {
+module.exports.handler = async function (event) {
+  console.log("Event:", event); // Adicione este log para depuração
+
   const targetUrl =
     event.headers["x-target-url"] || event.queryStringParameters["target-url"];
 
@@ -36,4 +38,4 @@ export async function handler(event) {
       }),
     };
   }
-}
+};

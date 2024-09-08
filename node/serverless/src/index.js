@@ -1,8 +1,7 @@
-import express from "express";
-import axios from "axios";
+const express = require("express");
+const axios = require("axios");
 
 const app = express();
-const port = 3000;
 
 app.use(express.json());
 
@@ -19,6 +18,6 @@ app.get("/fetch-data", async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+app.listen(3000, () => {
+  console.log("Server running at http://localhost:3000");
 });

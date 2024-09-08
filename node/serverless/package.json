@@ -4,25 +4,31 @@
   "main": "index.js",
   "author": "Anael Medeiros",
   "license": "MIT",
-  "type": "module",
   "dependencies": {
     "axios": "^1.7.5",
+    "browserify-zlib": "^0.2.0",
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.0",
     "express": "^4.19.2",
+    "node-polyfill-webpack-plugin": "^4.0.0",
     "path-browserify": "^1.0.1",
+    "process": "^0.11.10",
+    "querystring-es3": "^0.2.1",
     "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
     "url": "^0.11.4",
     "util": "^0.12.5",
-    "webpack": "^5.0.0",
-    "webpack-cli": "^4.0.0",
     "webpack-node-externals": "^3.0.0"
   },
   "scripts": {
-    "build": "webpack --config webpack.config.js",
     "start": "netlify dev"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@babel/preset-env": "^7.25.4",
-    "babel-loader": "^9.1.3"
+    "babel-loader": "^9.1.3",
+    "html-webpack-plugin": "^5.6.0",
+    "webpack": "^5.94.0",
+    "webpack-cli": "^5.1.4"
   }
 }

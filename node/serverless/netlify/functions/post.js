@@ -11,6 +11,21 @@ const createUrlWithParams = (baseUrl, params) => {
 module.exports.handler = async function (event) {
   // console.log("Event:", event);
 
+  const headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, x-target-url",
+  };
+
+  // Tratamento de preflight request (OPTIONS)
+  if (event.httpMethod === "OPTIONS") {
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({}),
+    };
+  }
+
   const targetUrl =
     event.headers["x-target-url"] || event.queryStringParameters["target-url"];
 
@@ -23,12 +38,13 @@ module.exports.handler = async function (event) {
 
   const url = createUrlWithParams(targetUrl, event.queryStringParameters);
 
+  // console.log("requestBody", requestBody);
   try {
     const requestBody = JSON.parse(event.body);
-    console.log("requestBody", requestBody);
     const response = await axios.post(url.toString(), { ...requestBody });
     return {
       statusCode: 200,
+      headers,
       body: JSON.stringify(response.data),
     };
   } catch (error) {

@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { volumeFilters } from "./data/volume-filters";
+import {
+  magicFormulaFiltersEVEBIT,
+  magicFormulaFiltersROIC,
+} from "./data/magic-formula-filters";
+// import { volume } from "./data/filters";
+// const API_URL = "http://localhost:5000/api";
 
 function formatNumber(value) {
   try {
@@ -13,18 +18,18 @@ function formatNumber(value) {
 async function fetchApiData(paramSelectedType) {
   const url = "https://scanner.tradingview.com/brazil/scan";
 
-  const payload = {
-    ...volumeFilters,
-    filter: volumeFilters.filter.map((item) =>
+  const payloadROIC = {
+    ...magicFormulaFiltersROIC,
+    filter: magicFormulaFiltersROIC.filter.map((item) =>
       item.left === "type" ? { ...item, right: paramSelectedType } : item
     ),
   };
-  // console.log("payload", payload);
+  // console.log("payloadROIC", payloadROIC);
 
-  const response = await axios.post(
-    // `https://bestchoice-serverless.netlify.app/.netlify/functions/post`,
-    `http://localhost:8888/.netlify/functions/post`,
-    payload,
+  const responseROIC = await axios.post(
+    `https://bestchoice-serverless.netlify.app/.netlify/functions/post`,
+    // `http://localhost:8888/.netlify/functions/post`,
+    payloadROIC,
     {
       headers: {
         "Content-Type": "application/json",
@@ -33,12 +38,35 @@ async function fetchApiData(paramSelectedType) {
     }
   );
 
+  const payloadEVEBIT = {
+    ...magicFormulaFiltersEVEBIT,
+    filter: magicFormulaFiltersEVEBIT.filter.map((item) =>
+      item.left === "type" ? { ...item, right: paramSelectedType } : item
+    ),
+  };
+  // console.log("payloadEVEBIT", payloadEVEBIT);
+
+  const responseEVEBIT = await axios.post(
+    `https://bestchoice-serverless.netlify.app/.netlify/functions/post`,
+    // `http://localhost:8888/.netlify/functions/post`,
+    payloadEVEBIT,
+    {
+      headers: {
+        "Content-Type": "application/json",
+        "x-target-url": url,
+      },
+    }
+  );
+
+  console.log(responseEVEBIT);
+  console.log(responseROIC);
+
   // console.log(response.data);
 
-  if (response) return response.data;
+  if (responseROIC) return responseROIC.data;
 }
 
-function Volume() {
+function MagicFormula() {
   const [selectedType, setSelectedType] = useState("stock");
   const [data, setData] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -102,10 +130,6 @@ function Volume() {
             <th>Nome</th>
             <th>Descrição</th>
             <th>Marca de Recomendação</th>
-            <th>Mudança no Volume</th>
-            <th>Volume</th>
-            <th>Média Volume 30d</th>
-            <th>Média Volume 10d</th>
             <th>Margem Líquida FY</th>
             <th>Dividendo Atual</th>
             <th>Rendimento do Fundo</th>
@@ -117,10 +141,6 @@ function Volume() {
               <td>{item.name}</td>
               <td>{item.description}</td>
               <td>{item.recommendation_mark}</td>
-              <td>{formatNumber(item.volume_change)}</td>
-              <td>{formatNumber(item.volume)}</td>
-              <td>{formatNumber(item.average_volume_30d_calc)}</td>
-              <td>{formatNumber(item.average_volume_10d_calc)}</td>
               <td>{formatNumber(item.net_margin_fy)}</td>
               <td>{formatNumber(item.dividends_yield_current)}</td>
               <td>{formatNumber(item.fund_performance_yeld)}</td>
@@ -132,4 +152,4 @@ function Volume() {
   );
 }
 
-export default Volume;
+export default MagicFormula;

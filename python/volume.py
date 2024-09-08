@@ -42,7 +42,7 @@ def fetch_api_data(selected_type):
     #     #         "operation": "equal",
     #     #         "right": 0
     #     #     })
-
+    print(payload)
     response = requests.post(url, json=payload, headers=headers)
 
     # print("Response Text:", response.text)

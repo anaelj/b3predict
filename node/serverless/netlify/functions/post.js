@@ -9,7 +9,7 @@ const createUrlWithParams = (baseUrl, params) => {
 };
 
 module.exports.handler = async function (event) {
-  console.log("Event:", event); // Adicione este log para depuração
+  // console.log("Event:", event);
 
   const targetUrl =
     event.headers["x-target-url"] || event.queryStringParameters["target-url"];
@@ -24,12 +24,15 @@ module.exports.handler = async function (event) {
   const url = createUrlWithParams(targetUrl, event.queryStringParameters);
 
   try {
-    const response = await axios.get(url.toString());
+    const requestBody = JSON.parse(event.body);
+    console.log("requestBody", requestBody);
+    const response = await axios.post(url.toString(), { ...requestBody });
     return {
       statusCode: 200,
       body: JSON.stringify(response.data),
     };
   } catch (error) {
+    console.log(error);
     return {
       statusCode: 500,
       body: JSON.stringify({

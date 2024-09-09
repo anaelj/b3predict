@@ -58,12 +58,51 @@ async function fetchApiData(paramSelectedType) {
     }
   );
 
-  console.log(responseEVEBIT);
-  console.log(responseROIC);
+  const indexA = responseEVEBIT.data.data.reduce((acc, item, idx) => {
+    acc[item.s] = { posA: idx };
+    return acc;
+  }, {});
+
+  responseROIC.data.data.reduce((acc, item, idx) => {
+    if (indexA[item.s]) {
+      indexA[item.s].posB = idx;
+    } else {
+      indexA[item.s] = { posB: idx };
+    }
+    return acc;
+  }, {});
+
+  // Criar uma lista de todos os itens, mesclando os dados de ambos os arrays
+  const allItems = [
+    ...responseEVEBIT.data.data,
+    ...responseROIC.data.data,
+  ].reduce((acc, item) => {
+    if (!acc.find((i) => i.s === item.s)) {
+      acc.push(item);
+    }
+    return acc;
+  }, []);
+
+  // Calcular a pontuação e ordenar os itens
+  const datasorted = allItems.sort((a, b) => {
+    const posA = indexA[a.s] || {};
+    const posB = indexA[b.s] || {};
+    const scoreA = (posA.posA || Infinity) + (posA.posB || Infinity);
+    const scoreB = (posB.posA || Infinity) + (posB.posB || Infinity);
+    return scoreA - scoreB;
+  });
+
+  console.log(datasorted);
+  // console.log(responseROIC);
 
   // console.log(response.data);
 
-  if (responseROIC) return responseROIC.data;
+  if (datasorted)
+    return {
+      data: datasorted.filter(
+        (item) => !item.d[0].includes("3F") && !item.d[0].includes("4F") && item
+      ),
+    };
 }
 
 function MagicFormula() {
@@ -99,6 +138,8 @@ function MagicFormula() {
           net_margin_fy: safeRound(item.d[28]),
           dividends_yield_current: safeRound(item.d[19]),
           fund_performance_yeld: safeRound(item.d[36]),
+          return_on_invested_capital_fq: safeRound(item.d[37]),
+          enterprise_value_to_ebit_ttm: safeRound(item.d[38]),
         };
       });
 
@@ -127,23 +168,29 @@ function MagicFormula() {
       <table>
         <thead>
           <tr>
+            <th>Pos</th>
             <th>Nome</th>
             <th>Descrição</th>
             <th>Marca de Recomendação</th>
             <th>Margem Líquida FY</th>
             <th>Dividendo Atual</th>
-            <th>Rendimento do Fundo</th>
+            <th>ROIC</th>
+            <th>EV/EBIT</th>
+            {/* <th>Rendimento do Fundo</th> */}
           </tr>
         </thead>
         <tbody>
           {data.map((item, index) => (
             <tr key={index}>
+              <td>{index}</td>
               <td>{item.name}</td>
               <td>{item.description}</td>
               <td>{item.recommendation_mark}</td>
               <td>{formatNumber(item.net_margin_fy)}</td>
               <td>{formatNumber(item.dividends_yield_current)}</td>
-              <td>{formatNumber(item.fund_performance_yeld)}</td>
+              <td>{formatNumber(item.return_on_invested_capital_fq)}</td>
+              <td>{formatNumber(item.enterprise_value_to_ebit_ttm)}</td>
+              {/* <td>{formatNumber(item.fund_performance_yeld)}</td> */}
             </tr>
           ))}
         </tbody>

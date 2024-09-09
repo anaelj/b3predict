@@ -18,11 +18,14 @@ const filter = [
   },
 ];
 
-const range = [0, 100];
+const range = [0, 1000];
 
 const options = {
   lang: "pt",
 };
+
+const symbolset = [];
+// const symbolset = ["SYML:BMFBOVESPA;IBXL"];
 
 export const magicFormulaFiltersROIC = {
   columns,
@@ -33,18 +36,19 @@ export const magicFormulaFiltersROIC = {
     sortBy: "return_on_invested_capital_fq",
     sortOrder: "desc",
   },
-  symbols: {},
+  symbols: { symbolset },
   markets: ["brazil"],
 };
 export const magicFormulaFiltersEVEBIT = {
   columns,
   filter,
+
   options,
   range,
   sort: {
     sortBy: "enterprise_value_to_ebit_ttm",
     sortOrder: "desc",
   },
-  symbols: {},
+  symbols: { symbolset },
   markets: ["brazil"],
 };

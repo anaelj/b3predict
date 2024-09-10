@@ -68,7 +68,7 @@ async function fetchApiData(paramSelectedType) {
 
   const responseEVEBIT = await getUnifyData(payloadEVEBIT);
 
-  console.log("responseEVEBIT", responseEVEBIT);
+  // console.log("responseEVEBIT", responseEVEBIT);
 
   const indexA = responseEVEBIT.reduce((acc, item, idx) => {
     acc[item.s] = { posA: idx };
@@ -118,7 +118,7 @@ function MagicFormula() {
   useEffect(() => {
     async function getData(paramSelectedType) {
       const apiData = await fetchApiData(paramSelectedType);
-      console.log("apiData", apiData);
+      // console.log("apiData", apiData);
       const total = apiData.totalCount || 0;
       const data = apiData.data || [];
 

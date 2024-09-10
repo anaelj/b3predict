@@ -15,8 +15,40 @@ function formatNumber(value) {
   }
 }
 
-async function fetchApiData(paramSelectedType) {
+// const unifyItems = (list) => {
+//   const map = new Map();
+
+//   list.forEach((item) => {
+//     const symbolWithoutF = item.d[0].replace(/d+F$/, "");
+//     item.d[0] = symbolWithoutF;
+//     if (!map.has(symbolWithoutF)) {
+//       map.set(symbolWithoutF, item);
+//     }
+//   });
+
+//   return [...map.values()];
+// };
+
+async function getUnifyData(payload) {
   const url = "https://scanner.tradingview.com/brazil/scan";
+
+  // `http://localhost:8888/.netlify/functions/post`,
+  const response = await axios.post(
+    "https://bestchoice-serverless.netlify.app/.netlify/functions/post",
+    payload,
+    {
+      headers: {
+        "Content-Type": "application/json",
+        "x-target-url": url,
+      },
+    }
+  );
+
+  return response.data.data;
+}
+
+async function fetchApiData(paramSelectedType) {
+  // const url = "https://scanner.tradingview.com/brazil/scan";
 
   const payloadROIC = {
     ...magicFormulaFiltersROIC,
@@ -24,19 +56,6 @@ async function fetchApiData(paramSelectedType) {
       item.left === "type" ? { ...item, right: paramSelectedType } : item
     ),
   };
-  // console.log("payloadROIC", payloadROIC);
-
-  const responseROIC = await axios.post(
-    `https://bestchoice-serverless.netlify.app/.netlify/functions/post`,
-    // `http://localhost:8888/.netlify/functions/post`,
-    payloadROIC,
-    {
-      headers: {
-        "Content-Type": "application/json",
-        "x-target-url": url,
-      },
-    }
-  );
 
   const payloadEVEBIT = {
     ...magicFormulaFiltersEVEBIT,
@@ -44,26 +63,19 @@ async function fetchApiData(paramSelectedType) {
       item.left === "type" ? { ...item, right: paramSelectedType } : item
     ),
   };
-  // console.log("payloadEVEBIT", payloadEVEBIT);
 
-  const responseEVEBIT = await axios.post(
-    `https://bestchoice-serverless.netlify.app/.netlify/functions/post`,
-    // `http://localhost:8888/.netlify/functions/post`,
-    payloadEVEBIT,
-    {
-      headers: {
-        "Content-Type": "application/json",
-        "x-target-url": url,
-      },
-    }
-  );
+  const responseROIC = await getUnifyData(payloadROIC);
 
-  const indexA = responseEVEBIT.data.data.reduce((acc, item, idx) => {
+  const responseEVEBIT = await getUnifyData(payloadEVEBIT);
+
+  console.log("responseEVEBIT", responseEVEBIT);
+
+  const indexA = responseEVEBIT.reduce((acc, item, idx) => {
     acc[item.s] = { posA: idx };
     return acc;
   }, {});
 
-  responseROIC.data.data.reduce((acc, item, idx) => {
+  responseROIC.reduce((acc, item, idx) => {
     if (indexA[item.s]) {
       indexA[item.s].posB = idx;
     } else {
@@ -73,10 +85,7 @@ async function fetchApiData(paramSelectedType) {
   }, {});
 
   // Criar uma lista de todos os itens, mesclando os dados de ambos os arrays
-  const allItems = [
-    ...responseEVEBIT.data.data,
-    ...responseROIC.data.data,
-  ].reduce((acc, item) => {
+  const allItems = [...responseEVEBIT, ...responseROIC].reduce((acc, item) => {
     if (!acc.find((i) => i.s === item.s)) {
       acc.push(item);
     }
@@ -91,11 +100,6 @@ async function fetchApiData(paramSelectedType) {
     const scoreB = (posB.posA || Infinity) + (posB.posB || Infinity);
     return scoreA - scoreB;
   });
-
-  console.log(datasorted);
-  // console.log(responseROIC);
-
-  // console.log(response.data);
 
   if (datasorted)
     return {
@@ -114,6 +118,7 @@ function MagicFormula() {
   useEffect(() => {
     async function getData(paramSelectedType) {
       const apiData = await fetchApiData(paramSelectedType);
+      console.log("apiData", apiData);
       const total = apiData.totalCount || 0;
       const data = apiData.data || [];
 

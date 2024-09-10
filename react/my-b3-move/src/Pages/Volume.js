@@ -22,8 +22,8 @@ async function fetchApiData(paramSelectedType) {
   // console.log("payload", payload);
 
   const response = await axios.post(
-    // `https://bestchoice-serverless.netlify.app/.netlify/functions/post`,
-    `http://localhost:8888/.netlify/functions/post`,
+    `https://bestchoice-serverless.netlify.app/.netlify/functions/post`,
+    // `http://localhost:8888/.netlify/functions/post`,
     payload,
     {
       headers: {

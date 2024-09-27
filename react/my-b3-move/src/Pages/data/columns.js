@@ -38,4 +38,12 @@ export const columns = [
   "Perf.Y",
   "return_on_invested_capital_fq",
   "enterprise_value_to_ebit_ttm",
+  "price_target_1y", // preço alvo
+  "Recommend.MA", // <0 indica baixa, maior que zero indica alta
+  "SMA200", // media 200
+  "SMA75", // media 75
+  "total_debt_yoy_growth_fy", // crecimento da dívida
+  "total_revenue_yoy_growth_ttm", // crescrimento receita
+  "net_income_yoy_growth_ttm", // crescimento lucro liquido
+  "net_debt_to_ebitda_fq", // divida liquida / ebitida
 ];

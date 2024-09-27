@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import {
   magicFormulaFiltersEVEBIT,
   magicFormulaFiltersROIC,
 } from "./data/magic-formula-filters";
+import styled from "styled-components";
 // import { volume } from "./data/filters";
 // const API_URL = "http://localhost:5000/api";
+
+const StyledRow = styled.tr`
+  &:hover {
+    background-color: #f0f0f0;
+    border-color: #f0f0f0;
+  }
+`;
 
 function formatNumber(value) {
   try {
@@ -131,6 +140,18 @@ function MagicFormula() {
             return value;
           }
         };
+        const roundString = (value, decimalPlaces) => {
+          try {
+            let num =
+              typeof value === "string"
+                ? parseFloat(value.trim().replace(",", "."))
+                : value;
+
+            return num.toFixed(decimalPlaces).toString();
+          } catch (error) {
+            return value;
+          }
+        };
 
         return {
           name: item.d[0],
@@ -145,6 +166,14 @@ function MagicFormula() {
           fund_performance_yeld: safeRound(item.d[36]),
           return_on_invested_capital_fq: safeRound(item.d[37]),
           enterprise_value_to_ebit_ttm: safeRound(item.d[38]),
+          price_target_1y: roundString(item.d[39], 2),
+          RecommendMA: roundString(item.d[40], 2),
+          SMA200: roundString(item.d[41], 2),
+          SMA75: roundString(item.d[42], 2),
+          total_debt_yoy_growth_fy: safeRound(item.d[43]),
+          total_revenue_yoy_growth_ttm: safeRound(item.d[44]),
+          net_income_yoy_growth_ttm: safeRound(item.d[45]),
+          net_debt_to_ebitda_fq: roundString(item.d[46], 2),
         };
       });
 
@@ -175,28 +204,80 @@ function MagicFormula() {
           <tr>
             <th>Pos</th>
             <th>Nome</th>
-            <th>Descrição</th>
-            <th>Marca de Recomendação</th>
+            {/* <th>Descrição</th> */}
+            <th>M. Reco.ção</th>
+            <th>Tend.</th>
             <th>Margem Líquida FY</th>
             <th>Dividendo Atual</th>
             <th>ROIC</th>
             <th>EV/EBIT</th>
+            <th>P. Alvo</th>
+            <th>M. 200</th>
+            <th>M. 75</th>
+            <th>Cres. Dívida</th>
+            <th>Cres. Receita</th>
+            <th>Cres. L.Liq.</th>
+            <th>Div./Ebitida</th>
+
             {/* <th>Rendimento do Fundo</th> */}
           </tr>
         </thead>
         <tbody>
           {data.map((item, index) => (
-            <tr key={index}>
+            <StyledRow key={index}>
               <td>{index}</td>
-              <td>{item.name}</td>
-              <td>{item.description}</td>
-              <td>{item.recommendation_mark}</td>
+              <td>
+                {" "}
+                <a
+                  href={`https://statusinvest.com.br/acoes/${item.name}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  {item.name}
+                </a>
+              </td>
+              {/* <td >{item.description}</td> */}
+              <td>
+                {/* {item.recommendation_mark}*/}
+                {Number(item?.recommendation_mark) > 1 && (
+                  <FaChevronUp size={12} color="green" />
+                )}
+                {Number(item.recommendation_mark) > 1.5 && (
+                  <FaChevronUp size={12} color="green" />
+                )}
+                {Number(item.recommendation_mark) > 2 && (
+                  <FaChevronUp size={12} color="green" />
+                )}
+              </td>
+              <td style={{ minWidth: "80px" }}>
+                {/* {formatNumber(item.RecommendMA)}{" "} */}
+                {Number(item?.RecommendMA) < 0 && (
+                  <FaChevronDown size={12} color="red" />
+                )}
+                {Number(item.RecommendMA) < -0.5 && (
+                  <FaChevronDown size={12} color="red" />
+                )}
+                {Number(item?.RecommendMA) > 0 && (
+                  <FaChevronUp size={12} color="green" />
+                )}
+                {Number(item.RecommendMA) > 0.5 && (
+                  <FaChevronUp size={12} color="green" />
+                )}
+              </td>
               <td>{formatNumber(item.net_margin_fy)}</td>
               <td>{formatNumber(item.dividends_yield_current)}</td>
               <td>{formatNumber(item.return_on_invested_capital_fq)}</td>
               <td>{formatNumber(item.enterprise_value_to_ebit_ttm)}</td>
-              {/* <td>{formatNumber(item.fund_performance_yeld)}</td> */}
-            </tr>
+              <td>{formatNumber(item.price_target_1y)}</td>
+
+              <td>{formatNumber(item.SMA200)}</td>
+              <td>{formatNumber(item.SMA75)}</td>
+              <td>{formatNumber(item.total_debt_yoy_growth_fy)}%</td>
+              <td>{formatNumber(item.total_revenue_yoy_growth_ttm)}%</td>
+              <td>{formatNumber(item.net_income_yoy_growth_ttm)}%</td>
+              <td>{formatNumber(item.net_debt_to_ebitda_fq)}</td>
+            </StyledRow>
           ))}
         </tbody>
       </table>

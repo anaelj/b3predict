@@ -126,9 +126,11 @@ const Transactions = () => {
                 ? currentValue?.Valor_da_Operacao || 0
                 : 0;
 
-              const sellSum = currentValue?.Entrada_Saida.includes("Debito")
-                ? currentValue?.Valor_da_Operacao || 0
-                : 0;
+              const sellSum =
+                currentValue?.Movimentacao.includes("Transfer") &&
+                currentValue?.Entrada_Saida.includes("Debito")
+                  ? currentValue?.Valor_da_Operacao || 0
+                  : 0;
 
               accumulator.profitSum += profitSum;
               accumulator.sellSum += sellSum;
@@ -146,7 +148,13 @@ const Transactions = () => {
               incomeSum: 0,
             }
           )
-      : { profitSum: 0, interestEquitySum: 0, dividendSum: 0, incomeSum: 0 };
+      : {
+          profitSum: 0,
+          interestEquitySum: 0,
+          dividendSum: 0,
+          incomeSum: 0,
+          sellSum: 0,
+        };
 
   const handleAddChild = (father, child) => {
     const currentBalance = father?.balance || father.Quantidade;
@@ -288,19 +296,20 @@ const Transactions = () => {
   return (
     <div>
       <div>
-        <h2>Soma Operações: {Number(profitSum).toFixed(2)}</h2>
+        <h2>Soma Operações: {Number(profitSum || 0).toFixed(2)}</h2>
         <h2>
-          Juros Sobre Capital Próprio: {Number(interestEquitySum).toFixed(2)}
+          Juros Sobre Capital Próprio:{" "}
+          {Number(interestEquitySum || 0).toFixed(2)}
         </h2>
-        <h2>Dividendo: {Number(dividendSum).toFixed(2)}</h2>
-        <h2>Rendimento: {Number(incomeSum).toFixed(2)}</h2>
+        <h2>Dividendo: {Number(dividendSum || 0).toFixed(2)}</h2>
+        <h2>Rendimento: {Number(incomeSum || 0).toFixed(2)}</h2>
         <h2>
           Total:{" "}
           {Number(
             dividendSum + profitSum + interestEquitySum + incomeSum
           ).toFixed(2)}
         </h2>
-        <h2>Vendas: {Number(parseFloat(sellSum)).toFixed(2)}</h2>
+        <h2>Vendas: {Number(parseFloat(sellSum || 0)).toFixed(2)}</h2>
         <div>
           <label>Ano</label>
           <input

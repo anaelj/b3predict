@@ -97,7 +97,7 @@ const Transactions = () => {
     updateTransaction(data);
   };
 
-  const { profitSum, interestEquitySum, dividendSum, sellSum } =
+  const { profitSum, interestEquitySum, dividendSum, sellSum, incomeSum } =
     transactions?.length > 0
       ? transactions
           ?.filter((item) => item.Data.includes(yearFilter))
@@ -120,6 +120,12 @@ const Transactions = () => {
                 ? currentValue?.Valor_da_Operacao || 0
                 : 0;
 
+              const incomeSum = currentValue?.Movimentacao.includes(
+                "Rendimento"
+              )
+                ? currentValue?.Valor_da_Operacao || 0
+                : 0;
+
               const sellSum = currentValue?.Entrada_Saida.includes("Debito")
                 ? currentValue?.Valor_da_Operacao || 0
                 : 0;
@@ -127,13 +133,20 @@ const Transactions = () => {
               accumulator.profitSum += profitSum;
               accumulator.sellSum += sellSum;
               accumulator.dividendSum += dividendSum;
+              accumulator.incomeSum += incomeSum;
               accumulator.interestEquitySum += interestEquitySum;
 
               return accumulator;
             },
-            { profitSum: 0, interestEquitySum: 0, dividendSum: 0, sellSum: 0 }
+            {
+              profitSum: 0,
+              interestEquitySum: 0,
+              dividendSum: 0,
+              sellSum: 0,
+              incomeSum: 0,
+            }
           )
-      : { profitSum: 0, interestEquitySum: 0, dividendSum: 0 };
+      : { profitSum: 0, interestEquitySum: 0, dividendSum: 0, incomeSum: 0 };
 
   const handleAddChild = (father, child) => {
     const currentBalance = father?.balance || father.Quantidade;
@@ -280,9 +293,12 @@ const Transactions = () => {
           Juros Sobre Capital Próprio: {Number(interestEquitySum).toFixed(2)}
         </h2>
         <h2>Dividendo: {Number(dividendSum).toFixed(2)}</h2>
+        <h2>Rendimento: {Number(incomeSum).toFixed(2)}</h2>
         <h2>
           Total:{" "}
-          {Number(dividendSum + profitSum + interestEquitySum).toFixed(2)}
+          {Number(
+            dividendSum + profitSum + interestEquitySum + incomeSum
+          ).toFixed(2)}
         </h2>
         <h2>Vendas: {Number(parseFloat(sellSum)).toFixed(2)}</h2>
         <div>

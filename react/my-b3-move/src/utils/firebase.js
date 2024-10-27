@@ -18,7 +18,7 @@ export async function fetchAndUpdateDocumentByID({ collectionName, data }) {
     const querySnapshot = await getDocs(q);
 
     if (!querySnapshot.empty) {
-      console.log("querySnapshot", querySnapshot);
+      // console.log("querySnapshot", querySnapshot);
 
       const docRef = querySnapshot.docs[0].ref;
 

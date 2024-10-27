@@ -4,13 +4,16 @@ const getTickers = require("./tickers");
 
 const tickersShorted = [];
 
-const lastPoint = "VIVR3";
-let canPlay = false;
+const lastPoint = "puth here the lasta ticker";
+let canPlay = true;
 
 async function run() {
   const data = await getTickers();
 
-  for (const tickerItem of data) {
+  const loopTickers = async (idx) => {
+    const tickerItem = data[idx];
+    if (!tickerItem) return;
+
     const tickerShortName = tickerItem?.tickerName?.slice(0, 4);
     if (tickerItem?.tickerName === lastPoint) canPlay = true;
 
@@ -20,31 +23,41 @@ async function run() {
 
       const sharkData = await scrapeParticipation(tickerItem.tickerName);
 
-      for (const sharkItem of sharkData) {
+      const loopSharks = async (idxSharks) => {
+        const sharkItem = sharkData[idxSharks];
+        if (!sharkItem) return;
         const { sharkName, participation } = sharkItem;
 
         if (sharkName && participation) {
+          const sharkNameSanitized = sharkName
+            .replaceAll(",", "")
+            .replaceAll(".", "")
+            .trim();
           console.log("scraped shark", sharkName);
-          const sharkData = await getShark({ sharkName });
+          const sharkData = await getShark({
+            sharkName: sharkNameSanitized,
+          });
           const tickers =
             sharkData?.tickers?.filter(
-              (ticker) => ticker !== tickerItem.tickerName
+              (ticker) => ticker?.tickerName !== tickerItem.tickerName
             ) || [];
           tickers.push({ tickerName: tickerItem.tickerName, participation });
 
-          console.log("updating shark", sharkName);
+          console.log("updating shark", sharkNameSanitized);
           await updateShark({
-            sharkName,
+            sharkName: sharkNameSanitized,
             data: { ...sharkData, tickers },
           });
-
-          break;
         }
-      }
-    }
-  }
+        await loopSharks(idxSharks + 1);
+      };
 
-  // console.log(data);
+      await loopSharks(0);
+    }
+    await loopTickers(idx + 1);
+  };
+
+  await loopTickers(0);
 }
 
 run();

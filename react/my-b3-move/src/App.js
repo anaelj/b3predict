@@ -5,6 +5,7 @@ import Saldo from "./Pages/Saldo";
 import Transactions from "./Pages/Transactions";
 import Volume from "./Pages/Volume";
 import MagicFormula from "./Pages/MagicFormula";
+import Sharks from "./Pages/Sharks";
 
 function App() {
   return (
@@ -27,6 +28,9 @@ function App() {
             <li>
               <Link to="/magic-formula">Magic Formula</Link>
             </li>
+            <li>
+              <Link to="/sharks">Sharks</Link>
+            </li>
           </ul>
         </nav>
 
@@ -36,6 +40,7 @@ function App() {
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/volume" element={<Volume />} />
           <Route path="/magic-formula" element={<MagicFormula />} />
+          <Route path="/sharks" element={<Sharks />} />
         </Routes>
       </div>
     </Router>

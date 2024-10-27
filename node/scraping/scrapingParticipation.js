@@ -12,6 +12,7 @@ async function scrapeParticipation(ticker) {
 
     const acionistas = await page.evaluate(() => {
       const rows = document.querySelectorAll("div.conteudo table tbody tr");
+      // const rows = document.querySelectorAll("div.conteudo div table tbody tr");
       const data = [];
 
       rows.forEach((row) => {
@@ -38,7 +39,3 @@ async function scrapeParticipation(ticker) {
   }
 }
 module.exports = scrapeParticipation;
-
-// scrapeParticipation("FRAS3")
-//   .then((data) => console.log(data))
-//   .catch(console.error);

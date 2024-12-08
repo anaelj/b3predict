@@ -28,4 +28,6 @@
 [build.environment]
   NODE_VERSION = "18"
 
+[functions]
+directory = "node/serverless/netlify/functions"
 

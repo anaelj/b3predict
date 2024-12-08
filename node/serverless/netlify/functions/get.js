@@ -14,8 +14,8 @@ module.exports.handler = async (event) => {
 
   const headers = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, x-target-url",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, x-target-url, Authorization",
   };
 
   if (event.httpMethod === "OPTIONS") {

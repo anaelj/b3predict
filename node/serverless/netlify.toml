@@ -28,5 +28,4 @@
 [build.environment]
   NODE_VERSION = "18"
 
-[functions]
-directory = "var/task/netlify/functions"
+

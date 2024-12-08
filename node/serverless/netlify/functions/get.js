@@ -12,6 +12,20 @@ module.exports.handler = async (event) => {
   const targetUrl =
     event.headers["x-target-url"] || event.queryStringParameters["target-url"];
 
+  const headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, x-target-url",
+  };
+
+  if (event.httpMethod === "OPTIONS") {
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({}),
+    };
+  }
+
   if (!targetUrl) {
     return {
       statusCode: 400,
@@ -26,11 +40,7 @@ module.exports.handler = async (event) => {
     return {
       statusCode: 200,
       body: JSON.stringify(response.data),
-      // headers: {
-      //   "Access-Control-Allow-Origin": "*",
-      //   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-      //   "Access-Control-Allow-Headers": "Content-Type, Authorization",
-      // },
+      headers,
     };
   } catch (error) {
     return {

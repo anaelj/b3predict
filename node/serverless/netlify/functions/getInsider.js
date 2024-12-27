@@ -1,0 +1,50 @@
+const axios = require("axios");
+const cheerio = require("cheerio");
+
+module.exports.handler = async (event) => {
+  const symbol =
+    event.queryStringParameters && event.queryStringParameters.symbol;
+
+  if (!symbol) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: 'O parâmetro "symbol" é obrigatório.' }),
+    };
+  }
+
+  const targetUrl = `https://www.fundamentus.com.br/insiders.php?papel=${symbol}&tipo=1`;
+
+  try {
+    const response = await axios.get(targetUrl);
+    const html = response.data;
+    const $ = cheerio.load(html);
+
+    const valores = [];
+    $("#resultado tbody tr").each((index, element) => {
+      if (index < 3) {
+        const valorText = $(element).find("td").eq(2).text().trim();
+        const valorNumerico = parseFloat(
+          valorText.replace(/\./g, "").replace(",", ".")
+        );
+        if (!isNaN(valorNumerico)) {
+          valores.push(valorNumerico);
+        }
+      }
+    });
+
+    const soma = valores.reduce((acc, curr) => acc + curr, 0);
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ soma }),
+    };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        error: "Falha ao buscar os dados",
+        detalhes: error.message,
+      }),
+    };
+  }
+};

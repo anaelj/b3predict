@@ -13,8 +13,9 @@ module.exports.handler = async function (event) {
 
   const headers = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, x-target-url",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, x-target-url, Authorization",
+    "Access-Control-Allow-Credentials": "true",
   };
 
   // Tratamento de preflight request (OPTIONS)

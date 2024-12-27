@@ -2,6 +2,21 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 
 module.exports.handler = async (event) => {
+  const headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Credentials": "true",
+  };
+
+  if (event.httpMethod === "OPTIONS") {
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({}),
+    };
+  }
+
   const symbol =
     event.queryStringParameters && event.queryStringParameters.symbol;
 

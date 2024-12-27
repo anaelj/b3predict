@@ -29,10 +29,39 @@ module.exports.handler = async (event) => {
     };
   }
 
+  const headersFundamentus = {
+    // ":authority": "www.fundamentus.com.br",
+    // ":method": "GET",
+    // ":path": "/insiders.php?papel=alos3&tipo=1",
+    // ":scheme": "https",
+    // accept:
+    //   "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+    // "accept-encoding": "gzip, deflate, br, zstd",
+    // "accept-language": "en-US,en;q=0.9,pt;q=0.8",
+    // "cache-control": "no-cache",
+    cookie:
+      "_ga=GA1.1.1963607766.1735269636; _qn=1; _uac=1735269648; PHPSESSID=1hnchc92nlo43si6jnva2hd703; cf_clearance=zicdAQmNhbnt_R9qRJY5jwOroPlCMF4_KBekPLF1q8g-1735304279-1.2.1.1-BzjURpuvF.1di7d47KNfldaWhSkq6kBeQVvE4Kr_4NYRTDkDtWTnALpdF5YI.Qb9lOhosFWmJ5fMB4bNW4SvW2bMFap1KG6dw05WHVwzIPtO.L6Bt.pY4rshiG838OZw9xWhpwgKER.MApTuLaJuDLnoMM3Tlq4eRPyDggSyeYdW2zL0aAsxk6QAXB8k.NuzruAsPzPumZsJ5zjpKkw1J3g9uJ1QxC.rNevAx5JZ_yGSyqJvQS4MqnJLEk7DMvmgF0AkUN5atVhglZOAMQdfNiwI1113AHqLePxPDwSInQmAib1Xh15BjuoZ9jHaMeGqeeHq6F5xVANBMixf0Q0rfbrdAFDlYMc4aR1FVjKutIBRnt3rbOh4eKHmmupqGhq96gR9s0FBcU65JBRSTtMUaw; _ga_MBRGJ9JF74=GS1.1.1735304279.3.1.1735304291.0.0.0",
+    pragma: "no-cache",
+    priority: "u=0, i",
+    "sec-ch-ua":
+      '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": '"macOS"',
+    "sec-fetch-dest": "document",
+    "sec-fetch-mode": "navigate",
+    "sec-fetch-site": "none",
+    "sec-fetch-user": "?1",
+    "upgrade-insecure-requests": "1",
+    "user-agent":
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+  };
+
   const targetUrl = `https://www.fundamentus.com.br/insiders.php?papel=${symbol}&tipo=1`;
 
   try {
-    const response = await axios.get(targetUrl);
+    const response = await axios.get(targetUrl, {
+      headers: headersFundamentus,
+    });
     const html = response.data;
     const $ = cheerio.load(html);
 

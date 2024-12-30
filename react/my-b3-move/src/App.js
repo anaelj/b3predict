@@ -33,8 +33,11 @@ function App() {
             </li>
             <li>
               <Link to="https://cheerful-bublanina-2a8bc0.netlify.app/">
-                Predict
+                Algorítmos de previsão
               </Link>
+            </li>
+            <li>
+              <Link to="https://b3-daily.netlify.app/">Checklist</Link>
             </li>
           </ul>
         </nav>

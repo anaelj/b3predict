@@ -31,6 +31,11 @@ function App() {
             <li>
               <Link to="/sharks">Sharks</Link>
             </li>
+            <li>
+              <Link to="https://cheerful-bublanina-2a8bc0.netlify.app/">
+                Predict
+              </Link>
+            </li>
           </ul>
         </nav>
 

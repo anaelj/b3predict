@@ -20,7 +20,7 @@ module.exports.handler = async (event) => {
 
   try {
     const symbol =
-      event.queryStringParameters && event.queryStringParameters.symbol;
+      event.queryStringParameters && event.queryStringParameters.symbol + ".SA";
 
     const apis = [yahoo, polygon];
     for (const api of apis) {

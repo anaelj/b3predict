@@ -42,7 +42,10 @@ function Volume() {
   const [selectedType, setSelectedType] = useState("stock");
   const [data, setData] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
-  // const [filters, setFilters] = useState(volume);
+  const [sortConfig, setSortConfig] = useState({
+    key: null,
+    direction: "ascending",
+  });
 
   useEffect(() => {
     async function getData(paramSelectedType) {
@@ -64,7 +67,9 @@ function Volume() {
           name: item.d[0],
           description: item.d[1],
           recommendation_mark: item.d[23],
-          volume_change: safeRound(item.d[24]),
+          volume_change: safeRound(
+            safeRound(item.d[25]) / safeRound(item.d[26])
+          ),
           volume: item.d[25],
           average_volume_30d_calc: safeRound(item.d[26]),
           average_volume_10d_calc: safeRound(item.d[27]),
@@ -80,6 +85,30 @@ function Volume() {
 
     getData(selectedType);
   }, [selectedType]);
+
+  const sortedData = React.useMemo(() => {
+    let sortableData = [...data];
+    if (sortConfig.key !== null) {
+      sortableData.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === "ascending" ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === "ascending" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableData;
+  }, [data, sortConfig]);
+
+  const requestSort = (key) => {
+    let direction = "ascending";
+    if (sortConfig.key === key && sortConfig.direction === "ascending") {
+      direction = "descending";
+    }
+    setSortConfig({ key, direction });
+  };
 
   return (
     <div>
@@ -99,20 +128,34 @@ function Volume() {
       <table>
         <thead>
           <tr>
-            <th>Nome</th>
-            <th>Descrição</th>
-            <th>Marca de Recomendação</th>
-            <th>Mudança no Volume</th>
-            <th>Volume</th>
-            <th>Média Volume 30d</th>
-            <th>Média Volume 10d</th>
-            <th>Margem Líquida FY</th>
-            <th>Dividendo Atual</th>
-            <th>Rendimento do Fundo</th>
+            <th onClick={() => requestSort("name")}>Nome</th>
+            <th onClick={() => requestSort("description")}>Descrição</th>
+            <th onClick={() => requestSort("recommendation_mark")}>
+              Marca de Recomendação
+            </th>
+            <th onClick={() => requestSort("volume_change")}>
+              Mudança no Volume
+            </th>
+            <th onClick={() => requestSort("volume")}>Volume</th>
+            <th onClick={() => requestSort("average_volume_30d_calc")}>
+              Média Volume 30d
+            </th>
+            <th onClick={() => requestSort("average_volume_10d_calc")}>
+              Média Volume 10d
+            </th>
+            <th onClick={() => requestSort("net_margin_fy")}>
+              Margem Líquida FY
+            </th>
+            <th onClick={() => requestSort("dividends_yield_current")}>
+              Dividendo Atual
+            </th>
+            <th onClick={() => requestSort("fund_performance_yeld")}>
+              Rendimento do Fundo
+            </th>
           </tr>
         </thead>
         <tbody>
-          {data.map((item, index) => (
+          {sortedData.map((item, index) => (
             <tr key={index}>
               <td>{item.name}</td>
               <td>{item.description}</td>

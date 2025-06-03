@@ -23,12 +23,6 @@ const Transactions = () => {
 
       const { Data: date, Produto } = transaction;
       const [, transactionMonth, transactionYear] = date.split("/");
-      console.log(
-        "transactionMonth, transactionYear",
-        transactionMonth,
-        transactionYear
-      );
-      console.log("monthFilter, yearFilter", monthFilter, yearFilter);
 
       const yearMatch = yearFilter
         ? parseInt(transactionYear) === parseInt(yearFilter)
@@ -44,6 +38,8 @@ const Transactions = () => {
     });
 
   const parseDate = (str) => {
+    if (!str || str.length !== 10) return "";
+
     const [day, month, year] = str.split("/");
     return new Date(`${year}-${month}-${day}`);
   };

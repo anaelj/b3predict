@@ -291,8 +291,6 @@ const Transactions = () => {
     );
   });
 
-  console.log();
-
   return (
     <div>
       <div>

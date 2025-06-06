@@ -31,20 +31,27 @@ function App() {
 
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const data = new Uint8Array(event.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
-
-      // Supondo que você queira ler a primeira planilha
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-      // Ignorar o cabeçalho e processar os dados
-      const headers = jsonData[0];
-      const rows = jsonData.slice(1);
-
-      setProgress({ current: 0, total: rows.length }); // Define o total de linhas para o progresso
-
       try {
+        const data = new Uint8Array(event.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+
+        // Supondo que você queira ler a primeira planilha
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+        // Ignorar o cabeçalho e processar os dados
+        const headers = jsonData[0];
+        const rows = jsonData.slice(1);
+
+        // Verifica se a coluna "Data" existe nos cabeçalhos
+        if (!headers.includes("Data")) {
+          alert("Erro: A coluna 'Data' não foi encontrada na planilha.");
+          setLoading(false); // Finaliza o carregamento
+          return;
+        }
+
+        setProgress({ current: 0, total: rows.length }); // Define o total de linhas para o progresso
+
         // Referência da coleção no Firestore
         const collectionRef = collection(db, cpf);
 

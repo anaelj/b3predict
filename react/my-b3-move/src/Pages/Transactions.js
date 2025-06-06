@@ -56,7 +56,13 @@ const Transactions = () => {
         sortedData = JSON.parse(sortedDataLocal);
       } else {
         const querySnapshot = await getDocs(collection(db, cpf));
-        const transactionsData = querySnapshot.docs.map((doc) => doc.data());
+        const transactionsData = querySnapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            ...data,
+            Data: data.Data || data.Data_do_Negocio || null, // Prioriza Data, depois Data_do_Negocio
+          };
+        });
 
         sortedData = transactionsData.sort(
           (a, b) => parseDate(a["Data"]) - parseDate(b["Data"])
